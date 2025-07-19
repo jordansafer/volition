@@ -1,0 +1,171 @@
+const DEFAULT_BLOCKLIST = [
+  "facebook.com",
+  "www.facebook.com",
+  "twitter.com",
+  "www.twitter.com",
+  "instagram.com",
+  "www.instagram.com",
+  "youtube.com",
+  "www.youtube.com",
+  "tiktok.com",
+  "www.tiktok.com",
+  "reddit.com",
+  "www.reddit.com",
+  "news.ycombinator.com",
+  "cnn.com",
+  "www.cnn.com",
+  "foxnews.com",
+  "www.foxnews.com",
+  "nytimes.com",
+  "www.nytimes.com"
+];
+
+// Initialize default settings on install
+chrome.runtime.onInstalled.addListener(async () => {
+  const data = await chrome.storage.local.get();
+  if (!data.blocklist) {
+    await chrome.storage.local.set({ blocklist: DEFAULT_BLOCKLIST });
+  }
+  if (!data.allowlist) {
+    await chrome.storage.local.set({ allowlist: [] });
+  }
+  if (typeof data.advancedMode === "undefined") {
+    await chrome.storage.local.set({ advancedMode: false });
+  }
+});
+
+function getDomain(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
+async function blockTab(tabId, originalUrl) {
+  const redirect = chrome.runtime.getURL("blocked.html?original=" + encodeURIComponent(originalUrl));
+  chrome.tabs.update(tabId, { url: redirect });
+}
+
+async function classifyDomain(domain) {
+  const { openaiApiKey } = await chrome.storage.local.get(["openaiApiKey"]);
+  if (!openaiApiKey) return false; // default allow when no key set
+
+  const systemPrompt =
+    "You are a helpful assistant who decides whether a website is likely distracting. Respond with a single word: BLOCK or ALLOW.";
+  const userPrompt = `Should access to \"${domain}\" be blocked? Respond with BLOCK or ALLOW.`;
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + openaiApiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 1
+      })
+    });
+    const data = await res.json();
+    const answer = data.choices?.[0]?.message?.content?.trim().toUpperCase();
+    return answer === "BLOCK";
+  } catch (err) {
+    console.error("Classification error", err);
+    return false;
+  }
+}
+
+async function handleUrl(tabId, url) {
+  const domain = getDomain(url);
+  if (!domain) return;
+
+  const { blocklist = [], allowlist = [], advancedMode = false } = await chrome.storage.local.get([
+    "blocklist",
+    "allowlist",
+    "advancedMode"
+  ]);
+
+  if (allowlist.includes(domain)) {
+    return; // allowed
+  }
+
+  if (blocklist.includes(domain)) {
+    await blockTab(tabId, url);
+    return;
+  }
+
+  if (advancedMode) {
+    const shouldBlock = await classifyDomain(domain);
+    if (shouldBlock) {
+      await chrome.storage.local.set({ blocklist: [...blocklist, domain] });
+      await blockTab(tabId, url);
+    } else {
+      await chrome.storage.local.set({ allowlist: [...allowlist, domain] });
+    }
+  }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (
+    changeInfo.status === "complete" &&
+    tab.url &&
+    !tab.url.startsWith("chrome-extension://")
+  ) {
+    handleUrl(tabId, tab.url);
+  }
+});
+
+async function chatWithGPT(messages) {
+  const { openaiApiKey } = await chrome.storage.local.get(["openaiApiKey"]);
+  if (!openaiApiKey) {
+    throw new Error("No API key set in options.");
+  }
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + openaiApiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ model: "gpt-3.5-turbo", messages, max_tokens: 300 })
+  });
+
+  const data = await res.json();
+  return data.choices?.[0]?.message;
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "chatgpt") {
+    (async () => {
+      try {
+        const reply = await chatWithGPT(message.messages);
+        sendResponse({ reply });
+      } catch (err) {
+        sendResponse({ error: err.message });
+      }
+    })();
+    return true; // keep the channel open
+  }
+
+  if (message.type === "allow_domain") {
+    (async () => {
+      const { domain } = message;
+      const { allowlist = [] } = await chrome.storage.local.get(["allowlist"]);
+      if (!allowlist.includes(domain)) {
+        await chrome.storage.local.set({ allowlist: [...allowlist, domain] });
+      }
+      sendResponse({ status: "ok" });
+    })();
+    return true;
+  }
+});
+
+// Open options page when the user clicks the extension icon
+chrome.action.onClicked.addListener(() => {
+  chrome.runtime.openOptionsPage();
+}); 

@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "GPT Focus Blocker",
+  "description": "Blocks distracting websites and negotiates access via ChatGPT to regain focus.",
+  "version": "1.0.0",
+  "permissions": ["storage", "tabs", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>", "https://api.openai.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_title": "Focus Blocker",
+    "default_icon": {
+      "16": "icons/icon.svg",
+      "32": "icons/icon.svg",
+      "48": "icons/icon.svg",
+      "128": "icons/icon.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/icon.svg",
+    "32": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html", "blocked.js", "style.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+} 

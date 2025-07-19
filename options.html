@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Focus Blocker Options</title>
+  <link rel="icon" type="image/png" href="icons/icon32.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Focus Blocker Settings</h1>
+  <section class="card">
+    <h2>OpenAI API Key</h2>
+    <input type="password" id="api-key" placeholder="sk-..." />
+    <button id="save-key">Save</button>
+    <span id="key-status"></span>
+  </section>
+  <section class="card">
+    <h2>Blocklist</h2>
+    <ul id="blocklist"></ul>
+    <input type="text" id="new-block-domain" placeholder="example.com" />
+    <button id="add-block">Add</button>
+  </section>
+  <section class="card">
+    <h2>Allowlist</h2>
+    <ul id="allowlist"></ul>
+    <input type="text" id="new-allow-domain" placeholder="example.com" />
+    <button id="add-allow">Add</button>
+  </section>
+  <section class="card">
+    <label>
+      <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains
+    </label>
+  </section>
+  <script src="options.js"></script>
+</body>
+</html> 
