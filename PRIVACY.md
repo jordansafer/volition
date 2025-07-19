@@ -36,9 +36,6 @@ Chrome’s extension storage is sandboxed per user profile. All network requests
 ## 6. Children’s Privacy
 The Extension is not directed to children under 13 and does not knowingly collect information from children.
 
-## 7. Contact
-Questions? Email **you@example.com**.
-
 ---
 
 © 2024 GPT Focus Blocker. All rights reserved. 
