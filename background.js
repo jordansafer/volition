@@ -135,8 +135,17 @@ async function chatWithGPT(messages) {
     body: JSON.stringify({ model: "gpt-3.5-turbo", messages, max_tokens: 300 })
   });
 
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error("OpenAI API error: " + errText);
+  }
+
   const data = await res.json();
-  return data.choices?.[0]?.message;
+  const message = data.choices?.[0]?.message;
+  if (!message) {
+    throw new Error("No choices returned from OpenAI");
+  }
+  return message;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

@@ -80,6 +80,17 @@ sendBtn.addEventListener("click", async () => {
   }
 });
 
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+if (!chrome.runtime) {
+  appendMessage("assistant", "Extension context not available. Make sure this page is opened via the extension.");
+}
+
 function fileToBase64(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
