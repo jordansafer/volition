@@ -19,6 +19,8 @@ async function init() {
   }
   $("advanced-mode").checked = data.advancedMode || false;
 
+  $("model-select").value = data.openaiModel || "gpt-3.5-turbo";
+
   renderList("blocklist", data.blocklist || [], "block");
   renderList("allowlist", data.allowlist || [], "allow");
 
@@ -26,6 +28,7 @@ async function init() {
   $("add-block").addEventListener("click", () => addDomain("block"));
   $("add-allow").addEventListener("click", () => addDomain("allow"));
   $("advanced-mode").addEventListener("change", saveAdvancedMode);
+  $("model-select").addEventListener("change", saveModel);
   $( "test-key" ).addEventListener("click", testKey);
 }
 
@@ -47,6 +50,11 @@ async function saveKey() {
   await chrome.storage.local.set({ openaiApiKey: key });
   $("key-status").textContent = "Saved!";
   setTimeout(() => ($("key-status").textContent = ""), 1500);
+}
+
+async function saveModel() {
+  const model = $("model-select").value;
+  await chrome.storage.local.set({ openaiModel: model });
 }
 
 async function addDomain(type) {

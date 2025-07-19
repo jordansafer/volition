@@ -12,10 +12,33 @@ siteInfo.textContent = `You attempted to visit ${originalUrl}`;
 const conversation = [
   {
     role: "system",
-    content:
-      "You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include \"APPROVED\" or \"DENIED\" clearly when you reach a decision."
+    content: `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
+
+When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.`
   }
 ];
+
+function parseDuration(text) {
+  const lower = text.toLowerCase();
+  if (/unlimited|indefinite|permanent/.test(lower)) return null;
+
+  const secMatch = lower.match(/(\d+)\s*(second|seconds|sec|secs)/);
+  if (secMatch) return parseInt(secMatch[1], 10) * 1000;
+
+  const minMatch = lower.match(/(\d+)\s*(minute|min|minutes)/);
+  if (minMatch) return parseInt(minMatch[1], 10) * 60 * 1000;
+
+  const hrMatch = lower.match(/(\d+)\s*(hour|hours|hr|hrs)/);
+  if (hrMatch) return parseInt(hrMatch[1], 10) * 60 * 60 * 1000;
+
+  const dayMatch = lower.match(/(\d+)\s*(day|days)/);
+  if (dayMatch) return parseInt(dayMatch[1], 10) * 24 * 60 * 60 * 1000;
+
+  const weekMatch = lower.match(/(\d+)\s*(week|weeks)/);
+  if (weekMatch) return parseInt(weekMatch[1], 10) * 7 * 24 * 60 * 60 * 1000;
+
+  return 60 * 60 * 1000; // fallback 1 hour in ms
+}
 
 function appendMessage(role, content) {
   const div = document.createElement("div");
@@ -39,7 +62,10 @@ sendBtn.addEventListener("click", async () => {
     const base64 = await fileToBase64(file);
     conversation.push({
       role: "user",
-      content: `User uploaded image as proof: data:${file.type};base64,${base64}`
+      content: [
+        { type: "text", text: "Proof image:" },
+        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64}` } }
+      ]
     });
     appendMessage("user", "[Image uploaded]");
     imageUpload.value = "";
@@ -72,7 +98,9 @@ sendBtn.addEventListener("click", async () => {
 
     if (reply.content.toLowerCase().includes("approved")) {
       const domain = new URL(originalUrl).hostname;
-      await chrome.runtime.sendMessage({ type: "allow_domain", domain });
+      const durationMs = parseDuration(reply.content);
+      const expiresAt = durationMs ? Date.now() + durationMs : null;
+      await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt });
       window.location.href = originalUrl;
     }
   } else {
@@ -95,8 +123,19 @@ function fileToBase64(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const base64 = reader.result.split(",")[1];
-      resolve(base64);
+      const img = new Image();
+      img.onload = () => {
+        const max = 256; // stronger downscale
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+        resolve(dataUrl.split(",")[1]);
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
   });

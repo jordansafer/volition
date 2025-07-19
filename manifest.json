@@ -28,6 +28,10 @@
     {
       "resources": ["blocked.html", "blocked.js", "style.css"],
       "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["timer.js"],
+      "matches": ["<all_urls>"]
     }
   ]
 } 

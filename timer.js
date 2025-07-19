@@ -1,0 +1,1 @@
+// Placeholder file required for web_accessible_resources. Actual script injected from background. 

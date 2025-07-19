@@ -90,8 +90,22 @@ async function handleUrl(tabId, url) {
     "advancedMode"
   ]);
 
-  if (allowlist.includes(domain)) {
-    return; // allowed
+  const normalizedAllow = allowlist.map((d) =>
+    typeof d === "string" ? { domain: d, expiresAt: null } : d
+  );
+
+  const allowEntry = normalizedAllow.find((e) => e.domain === domain);
+  if (allowEntry) {
+    if (allowEntry.expiresAt && Date.now() > allowEntry.expiresAt) {
+      // expired, remove
+      await chrome.storage.local.set({
+        allowlist: normalizedAllow.filter((e) => e.domain !== domain)
+      });
+      // fall through to block check
+    } else {
+      await injectTimer(tabId, allowEntry.expiresAt);
+      return; // allowed
+    }
   }
 
   if (blocklist.includes(domain)) {
@@ -105,7 +119,8 @@ async function handleUrl(tabId, url) {
       await chrome.storage.local.set({ blocklist: [...blocklist, domain] });
       await blockTab(tabId, url);
     } else {
-      await chrome.storage.local.set({ allowlist: [...allowlist, domain] });
+      const newAllow = { domain, expiresAt: null };
+      await chrome.storage.local.set({ allowlist: [...normalizedAllow, newAllow] });
     }
   }
 }
@@ -121,9 +136,24 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 async function chatWithGPT(messages) {
-  const { openaiApiKey } = await chrome.storage.local.get(["openaiApiKey"]);
-  if (!openaiApiKey) {
-    throw new Error("No API key set in options.");
+   const { openaiApiKey, openaiModel = "gpt-3.5-turbo" } = await chrome.storage.local.get([
+     "openaiApiKey",
+     "openaiModel"
+   ]);
+   if (!openaiApiKey) {
+     throw new Error("No API key set in options.");
+   }
+
+  let modelToUse = openaiModel;
+  const containsImage = messages.some((m) => {
+    if (typeof m.content === "string") return /data:image\//.test(m.content);
+    if (Array.isArray(m.content)) {
+      return m.content.some((part) => part.type === "image_url");
+    }
+    return false;
+  });
+  if (containsImage && modelToUse.startsWith("gpt-3.5")) {
+    modelToUse = "gpt-4o-mini"; // auto-upgrade for vision
   }
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -132,7 +162,7 @@ async function chatWithGPT(messages) {
       "Authorization": "Bearer " + openaiApiKey,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ model: "gpt-3.5-turbo", messages, max_tokens: 300 })
+    body: JSON.stringify({ model: modelToUse, messages, max_tokens: 300 })
   });
 
   if (!res.ok) {
@@ -163,16 +193,97 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "allow_domain") {
     (async () => {
-      const { domain } = message;
+      const { domain, durationMinutes, expiresAt } = message;
       const { allowlist = [] } = await chrome.storage.local.get(["allowlist"]);
-      if (!allowlist.includes(domain)) {
-        await chrome.storage.local.set({ allowlist: [...allowlist, domain] });
+      // Normalize existing allowlist entries to objects
+      const normalized = allowlist.map((d) =>
+        typeof d === "string" ? { domain: d, expiresAt: null } : d
+      );
+      const finalExpires = typeof expiresAt === "number" ? expiresAt : (durationMinutes ? Date.now() + durationMinutes * 60 * 1000 : null);
+      const existingIndex = normalized.findIndex((e) => e.domain === domain);
+      if (existingIndex === -1) {
+        normalized.push({ domain, expiresAt: finalExpires });
+      } else {
+        normalized[existingIndex].expiresAt = finalExpires;
       }
+      await chrome.storage.local.set({ allowlist: normalized });
       sendResponse({ status: "ok" });
     })();
     return true;
   }
+
+  if (message.type === "expire_allow") {
+    (async () => {
+      const { domain, tabId } = message;
+      const useTabId = tabId || (sender.tab ? sender.tab.id : null);
+      const { allowlist = [] } = await chrome.storage.local.get(["allowlist"]);
+      const updated = (allowlist || []).filter((e) => {
+        if (typeof e === "string") return e !== domain;
+        return e.domain !== domain;
+      });
+      await chrome.storage.local.set({ allowlist: updated });
+      // force re-check of current tab to block
+      if (useTabId !== null) {
+        const tab = await chrome.tabs.get(useTabId);
+        if (tab && tab.url) {
+          handleUrl(useTabId, tab.url);
+        }
+      }
+      sendResponse({ status: "expired" });
+    })();
+    return true;
+  }
 });
+
+async function injectTimer(tabId, expiresAt) {
+  if (!expiresAt) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId, allFrames: false },
+      func: (end) => {
+        if (window.__focusTimerInjected) return;
+        window.__focusTimerInjected = true;
+        const div = document.createElement("div");
+        div.id = "focus-timer-overlay";
+        div.style.cssText =
+          "position:fixed;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;z-index:2147483647;font-family:Arial, sans-serif;";
+        document.body.appendChild(div);
+
+        function update() {
+          const ms = end - Date.now();
+          if (ms <= 0) {
+            div.textContent = "0s";
+            chrome.runtime.sendMessage({ type: 'expire_allow', domain: location.hostname });
+            setTimeout(() => location.reload(), 500);
+            return;
+          }
+          const minutes = Math.floor(ms / 60000);
+          const hours = Math.floor(minutes / 60);
+          const secs = Math.floor((ms % 60000) / 1000);
+
+          let text;
+          if (hours >= 1) {
+            text = hours + "h";
+          } else if (minutes >= 5) {
+            text = minutes + "m";
+          } else if (minutes >= 1) {
+            text = "a few minutes";
+          } else if (secs > 10) {
+            text = secs + "s";
+          } else {
+            text = secs + "s";
+          }
+          div.textContent = text;
+          setTimeout(update, ms > 60000 ? 60000 : 1000);
+        }
+        update();
+      },
+      args: [expiresAt]
+    });
+  } catch (err) {
+    console.error("injectTimer error", err);
+  }
+}
 
 // Open options page when the user clicks the extension icon
 chrome.action.onClicked.addListener(() => {
