@@ -136,7 +136,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (
     changeInfo.status === "complete" &&
     tab.url &&
-    !tab.url.startsWith("chrome-extension://")
+    /^https?:\/\//.test(tab.url) // only process http/https pages
   ) {
     handleUrl(tabId, tab.url);
   }

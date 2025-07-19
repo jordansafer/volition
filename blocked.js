@@ -101,10 +101,17 @@ sendBtn.addEventListener("click", async () => {
     appendMessage("assistant", reply.content);
 
     if (reply.content.toLowerCase().includes("approved")) {
-      const domain = new URL(originalUrl).hostname;
+      let domain = null;
+      try {
+        domain = new URL(originalUrl).hostname;
+      } catch (_) {}
+
       const durationMs = parseDuration(reply.content);
       const expiresAt = durationMs ? Date.now() + durationMs : null;
-      await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt });
+
+      if (domain) {
+        await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt });
+      }
       window.location.href = originalUrl;
     }
   } else {
