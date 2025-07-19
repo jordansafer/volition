@@ -15,6 +15,10 @@ const conversation = [
     content: `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
 
 When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.`
+  },
+  {
+    role: "user",
+    content: `I am attempting to visit: ${originalUrl}`
   }
 ];
 
