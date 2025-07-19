@@ -1,0 +1,9 @@
+{
+  "name": "gpt-focus-blocker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome extension that blocks distracting sites and negotiates with ChatGPT.",
+  "scripts": {
+    "build": "bash dist.sh"
+  }
+} 
