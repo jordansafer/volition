@@ -69,4 +69,4 @@ See [PRIVACY.md](./PRIVACY.md).  In short: all data remains local; the extension
 
 ## 📄 License
 
-MIT © 2024 Your Name 
+MIT © 2024 
