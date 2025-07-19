@@ -52,7 +52,14 @@ async function classifyDomain(domain) {
   if (!openaiApiKey) return false; // default allow when no key set
 
   const systemPrompt =
-    "You are a helpful assistant who decides whether a website is likely distracting. Respond with a single word: BLOCK or ALLOW.";
+    `You are an automated website-focus reviewer. Your goal is to help users stay productive. You must answer with exactly ONE word: BLOCK or ALLOW (uppercase). BLOCK if the site is likely to distract from focused work, including but not limited to:
+• Social media (Facebook, Twitter/X, Instagram, TikTok, Reddit, LinkedIn)
+• Video streaming or endless-scroll entertainment (YouTube, Netflix, Twitch)
+• News, finance-news, tabloids, or opinion (CNN, NYTimes, WSJ, FoxNews, CNBC, Bloomberg, etc.)
+• Meme or humour sites
+• Gaming or sports highlights
+
+ALLOW only when the domain is clearly work-related or a neutral tool (e.g. documentation, StackOverflow, github.com, docs.google.com). When unsure, prefer BLOCK.`;
   const userPrompt = `Should access to \"${domain}\" be blocked? Respond with BLOCK or ALLOW.`;
 
   try {

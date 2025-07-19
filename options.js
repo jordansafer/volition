@@ -35,14 +35,27 @@ async function init() {
 function renderList(listId, items, type) {
   const ul = $(listId);
   ul.innerHTML = "";
-  items.forEach((domain) => {
+  items.forEach((entry) => {
+    const domain = typeof entry === "string" ? entry : entry.domain;
+    const expiresAt = typeof entry === "object" && entry.expiresAt ? entry.expiresAt : null;
     const li = document.createElement("li");
-    li.textContent = domain;
+    li.textContent = domain + (expiresAt ? ` (expires ${formatExpiry(expiresAt)})` : "");
     li.style.cursor = "pointer";
     li.title = "Click to remove";
     li.addEventListener("click", () => removeDomain(type, domain));
     ul.appendChild(li);
   });
+}
+
+function formatExpiry(ts) {
+  const diff = ts - Date.now();
+  if (diff <= 0) return "expired";
+  const minutes = Math.round(diff / 60000);
+  if (minutes >= 60) {
+    const hrs = Math.round(minutes / 60);
+    return `in ${hrs}h`;
+  }
+  return `in ${minutes}m`;
 }
 
 async function saveKey() {
@@ -65,9 +78,9 @@ async function addDomain(type) {
 
   const data = await chrome.storage.local.get([listKey]);
   const list = data[listKey] || [];
-  if (!list.includes(domain)) {
+  const exists = list.some((e) => (typeof e === "string" ? e : e.domain) === domain);
+  if (!exists) {
     list.push(domain);
-    await chrome.storage.local.set({ [listKey]: list });
   }
   $(inputId).value = "";
   renderList(listKey, list, type);
@@ -76,7 +89,7 @@ async function addDomain(type) {
 async function removeDomain(type, domain) {
   const listKey = type === "block" ? "blocklist" : "allowlist";
   const data = await chrome.storage.local.get([listKey]);
-  const list = (data[listKey] || []).filter((d) => d !== domain);
+  const list = (data[listKey] || []).filter((d) => (typeof d === "string" ? d : d.domain) !== domain);
   await chrome.storage.local.set({ [listKey]: list });
   renderList(listKey, list, type);
 }
