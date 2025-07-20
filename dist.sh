@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
 # Clean
-rm -rf dist gpt-focus-blocker-dist.zip
+rm -rf dist volition-dist.zip
 mkdir dist
 
 # Copy everything except dev/builder files
@@ -19,6 +19,6 @@ rsync -a ./ dist/ \
 
 # Create ZIP
 cd dist
-zip -r ../gpt-focus-blocker-dist.zip . -x "*.DS_Store"
+zip -r ../volition-dist.zip . -x "*.DS_Store"
 
-echo "Created gpt-focus-blocker-dist.zip in project root." 
+echo "Created volition-dist.zip in project root." 

@@ -157,16 +157,14 @@ async function chatWithGPT(messages) {
   const {
     openaiApiKey,
     openaiTextModel,
-    openaiVisionModel,
-    openaiModel // legacy single setting
+    openaiVisionModel
   } = await chrome.storage.local.get([
     "openaiApiKey",
     "openaiTextModel",
-    "openaiVisionModel",
-    "openaiModel"
+    "openaiVisionModel"
   ]);
 
-  const textModel = openaiTextModel || openaiModel || "gpt-3.5-turbo";
+  const textModel = openaiTextModel || "gpt-3.5-turbo";
   let visionModel = openaiVisionModel || null;
   if (!openaiApiKey) {
     throw new Error("No API key set in options.");

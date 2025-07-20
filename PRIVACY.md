@@ -1,8 +1,8 @@
-# GPT Focus Blocker – Privacy Policy
+# Volition – Privacy Policy
 
 _Last updated: 2024-07-19_
 
-GPT Focus Blocker ("the Extension") runs entirely in your browser. We take privacy seriously and follow the Chrome Web Store **User Data Policy**.
+Volition ("the Extension") runs entirely in your browser. We take privacy seriously and follow the Chrome Web Store **User Data Policy**.
 
 ## 1. Information We Collect
 The Extension **does not** collect, log, or transmit any personal information such as name, email address, browsing history, or cookies.
@@ -38,4 +38,4 @@ The Extension is not directed to children under 13 and does not knowingly collec
 
 ---
 
-© 2024 GPT Focus Blocker. All rights reserved. 
+© 2024 Volition. All rights reserved. 

@@ -1,5 +1,5 @@
 {
-  "name": "gpt-focus-blocker",
+  "name": "volition",
   "version": "1.0.0",
   "private": true,
   "description": "Chrome extension that blocks distracting sites and negotiates with ChatGPT.",

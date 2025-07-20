@@ -1,4 +1,4 @@
-# GPT Focus Blocker
+# Volition
 
 A Chrome (Manifest V3) extension that blocks distracting websites and forces you to **negotiate with ChatGPT** before providing timed access.
 
@@ -24,8 +24,8 @@ A Chrome (Manifest V3) extension that blocks distracting websites and forces you
 
 1. Clone the repo and install dependencies (only for build tools):
    ```bash
-   git clone https://github.com/yourname/gpt-focus-blocker.git
-   cd gpt-focus-blocker
+   git clone https://github.com/jordansafer/volition.git
+   cd volition
    ```
 2. Load in Chrome:
    1. Visit `chrome://extensions`.
@@ -42,7 +42,7 @@ A Chrome (Manifest V3) extension that blocks distracting websites and forces you
 ```
 npm run build   # or just:  bash dist.sh
 ```
-This script creates a **dist/** directory without the Git repo and makes `gpt-focus-blocker-dist.zip`, ready for upload.
+This script creates a **dist/** directory without the Git repo and makes `volition-dist.zip`, ready for upload.
 
 ---
 
