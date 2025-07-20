@@ -1,6 +1,6 @@
 # Volition
 
-A Chrome (Manifest V3) extension that blocks distracting websites and forces you to **negotiate with ChatGPT** before providing timed access.
+A Chrome extension that blocks distracting websites and forces you to **negotiate with ChatGPT** before providing timed access.
 
 ![Screenshot of blocked page](./docs/screenshot-blocked.png)
 
