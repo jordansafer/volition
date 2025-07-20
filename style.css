@@ -164,6 +164,7 @@ li {
   font-size:14px;
   align-items:center;
   justify-content:center;
+  line-height:1.2;
 }
 
 .file-btn:hover {

@@ -61,6 +61,7 @@ async function classifyDomain(domain) {
 • News, finance-news, tabloids, or opinion (CNN, NYTimes, WSJ, FoxNews, CNBC, Bloomberg, etc.)
 • Meme or humour sites
 • Gaming or sports highlights
+• Gaming sites, MMO forums, or game launchers
 
 Additional rules:
 • Block social media, scrolling, and news sites by default.

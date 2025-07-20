@@ -11,12 +11,31 @@ let currentModel = null;
 
 siteInfo.textContent = `You attempted to visit ${originalUrl}`;
 
+const TODAY = new Date().toISOString().split('T')[0];
+
 // store default prompt
 const DEFAULT_SYSTEM_PROMPT = `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
 
-When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.
+Today is ${TODAY}. When the user uploads a proof image you will receive an ISO timestamp (e.g., 2024-07-20T15:30:00Z) and the resolution in the preceding text message. Use that timestamp to verify recency.
 
-Be VERY strict. Unless there's a clear work use-case, first discover the user's real priorities. Require concrete evidence of a *"little-one-step"* toward a real-life task before granting any distraction time. Ask for a photo proving the step (e.g., sock on foot, running shoe, opened IDE). Verify they haven't already done that step. After valid proof, allow only 5-10 minutes. Stand firm; no high-ball negotiations. Always specify a single, precise action and the exact photo required.`;
+---- Site Classification Policy ----
+• Block social media, scrolling feeds, news sites, blogs, gaming sites and sports-highlight pages by default.
+• Allow search engines, scientific portals, and reference databases by default.
+• For any other domain, decide which category it is closest to and apply the corresponding rule.  If clearly "always allow" (e.g., google.com) you should immediately respond with "APPROVED unlimited" without demanding proof.
+
+---- Negotiation Guidelines ----
+Be VERY strict. Unless there is a clear work use-case you must discover the user's real priorities or life tasks.
+Ask for evidence of a *little-one-step* via a photo— the smallest concrete action showing initial progress (e.g., put on one sock if depressed ➜ next step could be running shoe ➜ then shorts, etc.).  Before assigning, check proof history so you never repeat the same task.
+
+When you approve a proof image: Start your reply with a single concise sentence describing exactly what you observed in the photo, then write a newline, then the line containing 'APPROVED for X minutes' (or 'APPROVED unlimited'). This lets the extension store that first sentence as proof history.
+
+After valid NEW proof grant only 5–10 minutes (pick a single value) and stand firm—no high-ball negotiations. Always specify:
+1. Exact task (cannot be something already done).
+2. Exact photo required so the user can prove it.
+When you approve, include a separate line exactly in the format: 'APPROVED for <number> <unit>' (e.g., 'APPROVED for 30 seconds', 'APPROVED for 5 minutes', 'APPROVED for 2 hours') or 'APPROVED unlimited'. This line must follow the photo description and uses the same time units you can grant (seconds, minutes, hours, days, weeks).
+
+If the user refuses tasks or fails to provide proof, deny access.
+-----------------------------------`;
 
 const conversation = [
   {
@@ -30,9 +49,12 @@ const conversation = [
 ];
 
 // merge override
-chrome.storage.local.get(["negotiationPrompt"], (res) => {
+chrome.storage.local.get(["negotiationPrompt", "classificationPrompt"], (res) => {
   if (res.negotiationPrompt) {
     conversation[0].content = `${DEFAULT_SYSTEM_PROMPT}\n\nUser override directives:\n${res.negotiationPrompt}`;
+  }
+  if (res.classificationPrompt) {
+    conversation[0].content += `\n\nAdditional site-classification override directives:\n${res.classificationPrompt}`;
   }
 });
 
@@ -42,6 +64,22 @@ chrome.storage.local.get(["openaiApiKey"], (d) => {
     modelInfo.style.color = "#cc0000";
   }
 });
+
+// fetch history
+let proofHistory = [];
+chrome.storage.local.get(["proofHistory"], (res) => {
+  proofHistory = Array.isArray(res.proofHistory) ? res.proofHistory : [];
+  if (proofHistory.length) {
+    const lines = proofHistory
+      .slice(-5)
+      .reverse()
+      .map((e, idx) => `${idx + 1}. ${e.desc} (timestamp ${e.timestamp})`)
+      .join("\n");
+    conversation[0].content += `\n\nPrevious proof history (most recent first, max 5):\n${lines}`;
+  }
+});
+
+let lastImageMeta = null; // {timestamp, desc}
 
 function parseDuration(text) {
   const lower = text.toLowerCase();
@@ -86,6 +124,7 @@ sendBtn.addEventListener("click", async () => {
     const file = imageUpload.files[0];
     const imgData = await fileToBase64(file);
     const ts = new Date(file.lastModified || Date.now()).toISOString();
+    lastImageMeta = { timestamp: ts, desc: "(pending)" };
     conversation.push({
       role: "user",
       content: [
@@ -129,6 +168,15 @@ sendBtn.addEventListener("click", async () => {
     appendMessage("assistant", reply.content);
 
     if (reply.content.toLowerCase().includes("approved")) {
+      if (lastImageMeta) {
+        // try extract a short description from assistant reply (first sentence)
+        const firstSentence = reply.content.split(/\n/)[0].trim();
+        lastImageMeta.desc = firstSentence.replace(/^APPROVED[^:]*:?/i, "").trim().substring(0, 140) || "User task completed";
+        proofHistory.push(lastImageMeta);
+        while (proofHistory.length > 5) proofHistory.shift();
+        chrome.storage.local.set({ proofHistory });
+        lastImageMeta = null;
+      }
       let domain = null;
       try {
         domain = new URL(originalUrl).hostname;
