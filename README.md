@@ -4,6 +4,8 @@ A Chrome extension that blocks distracting websites and forces you to **negotiat
 
 ![Screenshot of blocked page](./docs/screenshot-blocked.png)
 
+![Volition Demo](./docs/volition_with_logo.mp4)
+
 ---
 
 ## ✨ Key Features
