@@ -14,7 +14,9 @@ siteInfo.textContent = `You attempted to visit ${originalUrl}`;
 // store default prompt
 const DEFAULT_SYSTEM_PROMPT = `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
 
-When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.`;
+When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.
+
+Be VERY strict. Unless there's a clear work use-case, first discover the user's real priorities. Require concrete evidence of a *"little-one-step"* toward a real-life task before granting any distraction time. Ask for a photo proving the step (e.g., sock on foot, running shoe, opened IDE). Verify they haven't already done that step. After valid proof, allow only 5-10 minutes. Stand firm; no high-ball negotiations. Always specify a single, precise action and the exact photo required.`;
 
 const conversation = [
   {
@@ -82,16 +84,18 @@ sendBtn.addEventListener("click", async () => {
 
   if (imageUpload.files[0]) {
     const file = imageUpload.files[0];
-    const base64 = await fileToBase64(file);
+    const imgData = await fileToBase64(file);
+    const ts = new Date(file.lastModified || Date.now()).toISOString();
     conversation.push({
       role: "user",
       content: [
-        { type: "text", text: "Proof image:" },
-        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64}` } }
+        { type: "text", text: `Proof image (timestamp ${ts}, ${imgData.width}×${imgData.height})` },
+        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imgData.data}` } }
       ]
     });
     appendMessage("user", "[Image uploaded]");
     imageUpload.value = "";
+    document.getElementById("upload-label").textContent = "📷 Upload Image";
   }
 
   userInput.value = "";
@@ -168,7 +172,7 @@ function fileToBase64(file) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
-        resolve(dataUrl.split(",")[1]);
+        resolve({ data: dataUrl.split(",")[1], width: canvas.width, height: canvas.height });
       };
       img.src = reader.result;
     };

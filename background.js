@@ -62,7 +62,11 @@ async function classifyDomain(domain) {
 • Meme or humour sites
 • Gaming or sports highlights
 
-ALLOW only when the domain is clearly work-related or a neutral tool (e.g. documentation, StackOverflow, github.com, docs.google.com). When unsure, prefer BLOCK.`;
+Additional rules:
+• Block social media, scrolling, and news sites by default.
+• Allow search engines, scientific portals, and reference databases by default.
+• Block blogs by default.
+• For other domains, decide which category they are closest to and apply the corresponding rule.`;
   const systemPrompt = classificationPrompt
     ? `${defaultPrompt}\n\nUser override directives:\n${classificationPrompt}`
     : defaultPrompt;

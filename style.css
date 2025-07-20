@@ -153,15 +153,17 @@ li {
  } 
 
 .file-btn {
-  display:inline-block;
+  display:inline-flex;
   background:#0066cc;
   color:#fff;
-  padding:8px 12px;
+  padding:8px 16px;
   border-radius:4px;
   cursor:pointer;
   margin-top:10px;
   margin-right:8px;
   font-size:14px;
+  align-items:center;
+  justify-content:center;
 }
 
 .file-btn:hover {
