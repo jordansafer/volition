@@ -69,18 +69,19 @@ textarea {
   margin-top: 10px;
 }
 
-button {
-  margin-top: 10px;
-  padding: 8px 16px;
+button,
+.file-btn {
   background: #0066cc;
   color: #fff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  padding: 8px 16px;
 }
 
-button:hover {
+button:hover,
+.file-btn:hover {
   background: #004c99;
 }
 
@@ -100,4 +101,74 @@ ul {
 
 li {
   padding: 4px 0;
+}
+
+.model-info, #model-info {
+  font-size: 12px;
+  color: #888;
+} 
+
+.input-row {
+   display: flex;
+   gap: 8px;
+   align-items: center;
+   margin-bottom: 8px;
+ }
+ 
+ .hint {
+   font-size: 13px;
+   color: #555;
+   display:block;
+   margin-top:4px;
+ }
+ 
+ textarea {
+   width: 100%;
+   border: 1px solid #ccc;
+   border-radius: 4px;
+   padding: 8px;
+   font-size: 14px;
+   resize: vertical;
+ }
+ 
+ /* Chat bubbles */
+ .bubble {
+   max-width: 90%;
+   padding: 6px 10px;
+   border-radius: 10px;
+   margin-bottom: 6px;
+   word-wrap: break-word;
+ }
+ .user-msg {
+   background: #e8e8e8;
+   align-self: flex-end;
+ }
+ .assistant-msg {
+   background: #f1f8ff;
+ }
+ 
+ .chat-window {
+   display: flex;
+   flex-direction: column;
+ } 
+
+.file-btn {
+  display:inline-block;
+  background:#0066cc;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:4px;
+  cursor:pointer;
+  margin-top:10px;
+  margin-right:8px;
+  font-size:14px;
+}
+
+.file-btn:hover {
+  background:#004c99;
+} 
+
+#key-status, #prompt-status {
+  display: block;
+  margin-top: 6px;
 } 

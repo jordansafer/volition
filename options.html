@@ -11,9 +11,12 @@
   <h1>Focus Blocker Settings</h1>
   <section class="card">
     <h2>OpenAI API Key</h2>
-    <input type="password" id="api-key" placeholder="sk-..." />
-    <button id="save-key">Save</button>
-    <button id="test-key">Test</button>
+    <div class="input-row">
+      <input type="password" id="api-key" placeholder="Paste your key here" />
+      <button id="save-key">Save</button>
+      <button id="test-key">Test</button>
+    </div>
+    <small class="hint">Need a key? <a href="https://platform.openai.com/account/api-keys" target="_blank">Generate one here</a>.</small>
     <span id="key-status"></span>
     <div style="margin-top:10px;">
       <label for="model-select"><strong>Model:</strong></label>
@@ -25,6 +28,7 @@
       </select>
     </div>
   </section>
+
   <section class="card">
     <h2>Blocklist</h2>
     <ul id="blocklist"></ul>
@@ -36,6 +40,15 @@
     <ul id="allowlist"></ul>
     <input type="text" id="new-allow-domain" placeholder="example.com" />
     <button id="add-allow">Add</button>
+  </section>
+  <section class="card">
+    <h2>Custom Prompts (optional)</h2>
+    <label for="neg-prompt"><strong>Negotiation prompt</strong></label>
+    <textarea id="neg-prompt" rows="4" placeholder="System prompt that governs ChatGPT's dialogue with you..."></textarea>
+    <label for="class-prompt" style="margin-top:8px;"><strong>Classification prompt</strong></label>
+    <textarea id="class-prompt" rows="4" placeholder="System prompt that decides BLOCK vs ALLOW for unknown domains..."></textarea>
+    <button id="save-prompts" style="margin-top:10px;">Save Prompts</button>
+    <span id="prompt-status"></span>
   </section>
   <section class="card">
     <label>

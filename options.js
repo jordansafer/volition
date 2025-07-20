@@ -9,7 +9,10 @@ async function init() {
     "openaiApiKey",
     "blocklist",
     "allowlist",
-    "advancedMode"
+    "advancedMode",
+    "negotiationPrompt",
+    "classificationPrompt",
+    "openaiModel"
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
@@ -21,6 +24,9 @@ async function init() {
 
   $("model-select").value = data.openaiModel || "gpt-3.5-turbo";
 
+  $("neg-prompt").value = data.negotiationPrompt || "";
+  $("class-prompt").value = data.classificationPrompt || "";
+
   renderList("blocklist", data.blocklist || [], "block");
   renderList("allowlist", data.allowlist || [], "allow");
 
@@ -29,6 +35,7 @@ async function init() {
   $("add-allow").addEventListener("click", () => addDomain("allow"));
   $("advanced-mode").addEventListener("change", saveAdvancedMode);
   $("model-select").addEventListener("change", saveModel);
+  $("save-prompts").addEventListener("click", savePrompts);
   $( "test-key" ).addEventListener("click", testKey);
 }
 
@@ -96,6 +103,14 @@ async function removeDomain(type, domain) {
 
 async function saveAdvancedMode() {
   await chrome.storage.local.set({ advancedMode: $("advanced-mode").checked });
+}
+
+async function savePrompts() {
+  const negotiationPrompt = $("neg-prompt").value;
+  const classificationPrompt = $("class-prompt").value;
+  await chrome.storage.local.set({ negotiationPrompt, classificationPrompt });
+  $("prompt-status").textContent = "Prompts saved!";
+  setTimeout(() => ($("prompt-status").textContent = ""), 1500);
 }
 
 async function testKey() {

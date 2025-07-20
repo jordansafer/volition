@@ -10,12 +10,14 @@
   <div class="container">
     <h1>Access Temporarily Blocked</h1>
     <p class="sub">Explain why you need access and ChatGPT will review your request.</p>
+    <p id="model-info" class="sub"></p>
     <p id="site-info"></p>
 
     <div id="chat-window" class="chat-window"></div>
 
     <textarea id="user-input" placeholder="Explain why you need access..."></textarea>
-    <input type="file" id="image-upload" accept="image/*" />
+    <input type="file" id="image-upload" accept="image/*" hidden />
+    <label for="image-upload" id="upload-label" class="file-btn">📷 Upload Image</label>
     <button id="send-btn">Send</button>
   </div>
 

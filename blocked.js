@@ -6,21 +6,40 @@ const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
 const imageUpload = document.getElementById("image-upload");
+const modelInfo = document.getElementById("model-info");
+let currentModel = null;
 
 siteInfo.textContent = `You attempted to visit ${originalUrl}`;
+
+// store default prompt
+const DEFAULT_SYSTEM_PROMPT = `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
+
+When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.`;
 
 const conversation = [
   {
     role: "system",
-    content: `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
-
-When approving, explicitly state the allowed time, e.g. 'APPROVED for 5 minutes', 'APPROVED for 2 hours', or 'APPROVED unlimited'. Use whole numbers.`
+    content: DEFAULT_SYSTEM_PROMPT
   },
   {
     role: "user",
     content: `I am attempting to visit: ${originalUrl}`
   }
 ];
+
+// merge override
+chrome.storage.local.get(["negotiationPrompt"], (res) => {
+  if (res.negotiationPrompt) {
+    conversation[0].content = `${DEFAULT_SYSTEM_PROMPT}\n\nUser override directives:\n${res.negotiationPrompt}`;
+  }
+});
+
+chrome.storage.local.get(["openaiApiKey"], (d) => {
+  if (!d.openaiApiKey) {
+    modelInfo.textContent = "⚠️ API key not set – open Settings to add it.";
+    modelInfo.style.color = "#cc0000";
+  }
+});
 
 function parseDuration(text) {
   const lower = text.toLowerCase();
@@ -46,8 +65,8 @@ function parseDuration(text) {
 
 function appendMessage(role, content) {
   const div = document.createElement("div");
-  div.className = role;
-  div.textContent = `${role === "user" ? "You" : "GPT"}: ${content}`;
+  div.className = `bubble ${role === "user" ? "user-msg" : "assistant-msg"}`;
+  div.textContent = content;
   chatWindow.appendChild(div);
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
@@ -97,6 +116,11 @@ sendBtn.addEventListener("click", async () => {
 
   if (response.reply && response.reply.content) {
     const reply = response.reply;
+    if (response.model) {
+       currentModel = response.model;
+       modelInfo.textContent = `Model: ${currentModel}`;
+       modelInfo.style.color = "#666";
+     }
     conversation.push(reply);
     appendMessage("assistant", reply.content);
 
@@ -150,4 +174,12 @@ function fileToBase64(file) {
     };
     reader.readAsDataURL(file);
   });
-} 
+}
+
+imageUpload.addEventListener("change",()=>{
+  if(imageUpload.files[0]){
+    document.getElementById("upload-label").textContent="Image selected✔";
+  } else {
+    document.getElementById("upload-label").textContent="📷 Upload Image";
+  }
+}); 

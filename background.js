@@ -48,10 +48,13 @@ async function blockTab(tabId, originalUrl) {
 }
 
 async function classifyDomain(domain) {
-  const { openaiApiKey } = await chrome.storage.local.get(["openaiApiKey"]);
+  const { openaiApiKey, classificationPrompt } = await chrome.storage.local.get([
+    "openaiApiKey",
+    "classificationPrompt"
+  ]);
   if (!openaiApiKey) return false; // default allow when no key set
 
-  const systemPrompt =
+  const defaultPrompt =
     `You are an automated website-focus reviewer. Your goal is to help users stay productive. You must answer with exactly ONE word: BLOCK or ALLOW (uppercase). BLOCK if the site is likely to distract from focused work, including but not limited to:
 • Social media (Facebook, Twitter/X, Instagram, TikTok, Reddit, LinkedIn)
 • Video streaming or endless-scroll entertainment (YouTube, Netflix, Twitch)
@@ -60,6 +63,9 @@ async function classifyDomain(domain) {
 • Gaming or sports highlights
 
 ALLOW only when the domain is clearly work-related or a neutral tool (e.g. documentation, StackOverflow, github.com, docs.google.com). When unsure, prefer BLOCK.`;
+  const systemPrompt = classificationPrompt
+    ? `${defaultPrompt}\n\nUser override directives:\n${classificationPrompt}`
+    : defaultPrompt;
   const userPrompt = `Should access to \"${domain}\" be blocked? Respond with BLOCK or ALLOW.`;
 
   try {
@@ -143,13 +149,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 async function chatWithGPT(messages) {
-   const { openaiApiKey, openaiModel = "gpt-3.5-turbo" } = await chrome.storage.local.get([
-     "openaiApiKey",
-     "openaiModel"
-   ]);
-   if (!openaiApiKey) {
-     throw new Error("No API key set in options.");
-   }
+  const { openaiApiKey, openaiModel = "gpt-3.5-turbo" } = await chrome.storage.local.get([
+    "openaiApiKey",
+    "openaiModel"
+  ]);
+  if (!openaiApiKey) {
+    throw new Error("No API key set in options.");
+  }
 
   let modelToUse = openaiModel;
   const containsImage = messages.some((m) => {
@@ -182,15 +188,15 @@ async function chatWithGPT(messages) {
   if (!message) {
     throw new Error("No choices returned from OpenAI");
   }
-  return message;
+  return { reply: message, model: modelToUse };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "chatgpt") {
     (async () => {
       try {
-        const reply = await chatWithGPT(message.messages);
-        sendResponse({ reply });
+        const result = await chatWithGPT(message.messages);
+        sendResponse(result);
       } catch (err) {
         sendResponse({ error: err.message });
       }
