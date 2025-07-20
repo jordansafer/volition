@@ -4,7 +4,11 @@ A Chrome extension that blocks distracting websites and forces you to **negotiat
 
 ![Screenshot of blocked page](./docs/screenshot-blocked.png)
 
-![Volition Demo](./docs/volition_with_logo.mp4)
+<p align="center">
+  <video src="./docs/volition_with_logo.mp4" controls loop muted playsinline width="600">
+    Sorry, your browser doesn't support embedded videos.
+  </video>
+</p>
 
 ---
 
@@ -52,7 +56,7 @@ This script creates a **dist/** directory without the Git repo and makes `voliti
 
 * Background logic is in `background.js` (service-worker).  
 * UI pages: `options.html` / `blocked.html`.
-* Icons: `icons/icon.svg` (source) → PNGs (16/32/48/128).
+* Icons: `icons/volition_logo.png` (source) → PNGs (16/32/48/128).
 * Privacy policy is in [PRIVACY.md](./PRIVACY.md).
 
 ### NPM scripts (optional)
