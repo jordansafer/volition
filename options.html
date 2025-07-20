@@ -19,10 +19,17 @@
     <small class="hint">Need a key? <a href="https://platform.openai.com/account/api-keys" target="_blank">Generate one here</a>.</small>
     <span id="key-status"></span>
     <div style="margin-top:10px;">
-      <label for="model-select"><strong>Model:</strong></label>
-      <select id="model-select">
+      <label for="text-model-select"><strong>Text-only model:</strong></label>
+      <select id="text-model-select" style="margin-right:12px;">
         <option value="gpt-3.5-turbo">gpt-3.5-turbo (cheap)</option>
         <option value="gpt-4o-mini">gpt-4o-mini</option>
+        <option value="gpt-4o">gpt-4o</option>
+        <option value="gpt-o3">gpt-o3</option>
+      </select>
+
+      <label for="vision-model-select"><strong>Vision model:</strong></label>
+      <select id="vision-model-select">
+        <option value="gpt-4o-mini">gpt-4o-mini (default)</option>
         <option value="gpt-4o">gpt-4o</option>
         <option value="gpt-o3">gpt-o3</option>
       </select>

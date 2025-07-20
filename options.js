@@ -12,7 +12,9 @@ async function init() {
     "advancedMode",
     "negotiationPrompt",
     "classificationPrompt",
-    "openaiModel"
+    "openaiModel", // legacy single model
+    "openaiTextModel",
+    "openaiVisionModel"
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
@@ -22,7 +24,8 @@ async function init() {
   }
   $("advanced-mode").checked = data.advancedMode || false;
 
-  $("model-select").value = data.openaiModel || "gpt-3.5-turbo";
+  $("text-model-select").value = data.openaiTextModel || data.openaiModel || "gpt-3.5-turbo";
+  $("vision-model-select").value = data.openaiVisionModel || "gpt-4o-mini";
 
   $("neg-prompt").value = data.negotiationPrompt || "";
   $("class-prompt").value = data.classificationPrompt || "";
@@ -34,7 +37,8 @@ async function init() {
   $("add-block").addEventListener("click", () => addDomain("block"));
   $("add-allow").addEventListener("click", () => addDomain("allow"));
   $("advanced-mode").addEventListener("change", saveAdvancedMode);
-  $("model-select").addEventListener("change", saveModel);
+  $("text-model-select").addEventListener("change", saveTextModel);
+  $("vision-model-select").addEventListener("change", saveVisionModel);
   $("save-prompts").addEventListener("click", savePrompts);
   $( "test-key" ).addEventListener("click", testKey);
 }
@@ -72,9 +76,14 @@ async function saveKey() {
   setTimeout(() => ($("key-status").textContent = ""), 1500);
 }
 
-async function saveModel() {
-  const model = $("model-select").value;
-  await chrome.storage.local.set({ openaiModel: model });
+async function saveTextModel() {
+  const model = $("text-model-select").value;
+  await chrome.storage.local.set({ openaiTextModel: model });
+}
+
+async function saveVisionModel() {
+  const model = $("vision-model-select").value;
+  await chrome.storage.local.set({ openaiVisionModel: model });
 }
 
 async function addDomain(type) {

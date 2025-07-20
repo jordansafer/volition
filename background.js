@@ -154,15 +154,25 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 async function chatWithGPT(messages) {
-  const { openaiApiKey, openaiModel = "gpt-3.5-turbo" } = await chrome.storage.local.get([
+  const {
+    openaiApiKey,
+    openaiTextModel,
+    openaiVisionModel,
+    openaiModel // legacy single setting
+  } = await chrome.storage.local.get([
     "openaiApiKey",
+    "openaiTextModel",
+    "openaiVisionModel",
     "openaiModel"
   ]);
+
+  const textModel = openaiTextModel || openaiModel || "gpt-3.5-turbo";
+  let visionModel = openaiVisionModel || null;
   if (!openaiApiKey) {
     throw new Error("No API key set in options.");
   }
 
-  let modelToUse = openaiModel;
+  let modelToUse = textModel;
   const containsImage = messages.some((m) => {
     if (typeof m.content === "string") return /data:image\//.test(m.content);
     if (Array.isArray(m.content)) {
@@ -170,8 +180,12 @@ async function chatWithGPT(messages) {
     }
     return false;
   });
-  if (containsImage && modelToUse.startsWith("gpt-3.5")) {
-    modelToUse = "gpt-4o-mini"; // auto-upgrade for vision
+  if (containsImage) {
+    if (!visionModel) {
+      // fallback: if user hasn't set vision model, upgrade based on text model heuristic
+      visionModel = textModel.startsWith("gpt-3.5") ? "gpt-4o-mini" : textModel;
+    }
+    modelToUse = visionModel;
   }
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
