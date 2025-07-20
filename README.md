@@ -4,11 +4,9 @@ A Chrome extension that blocks distracting websites and forces you to **negotiat
 
 ![Screenshot of blocked page](./docs/screenshot-blocked.png)
 
-<p align="center">
-  <video src="./docs/volition_with_logo.mp4" controls loop muted playsinline width="600">
-    Sorry, your browser doesn't support embedded videos.
-  </video>
-</p>
+
+https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
+
 
 ---
 
