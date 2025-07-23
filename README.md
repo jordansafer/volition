@@ -2,6 +2,8 @@
 
 A Chrome extension that blocks distracting websites and forces you to **negotiate with ChatGPT** before providing timed access.
 
+Install the [Chrome Extension](https://chromewebstore.google.com/detail/volition/iempmfmcjgjdpmobhlaookjjjmbfiaeh)
+
 ![Screenshot of blocked page](./docs/screenshot-blocked.png)
 
 
