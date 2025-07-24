@@ -11,7 +11,6 @@ const DEFAULT_BLOCKLIST = [
   "www.tiktok.com",
   "reddit.com",
   "www.reddit.com",
-  "news.ycombinator.com",
   "cnn.com",
   "www.cnn.com",
   "foxnews.com",
