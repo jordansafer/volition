@@ -8,6 +8,11 @@
 </head>
 <body>
   <h1>Volition Settings</h1>
+  
+  <nav style="text-align: center; margin-bottom: 20px;">
+    <a href="stats.html" style="color: #0066cc; text-decoration: none; font-weight: 500;">📊 View Usage Statistics</a>
+  </nav>
+  
   <section class="card">
     <h2>OpenAI API Key</h2>
     <div class="input-row">
@@ -68,6 +73,11 @@
       <label for="custom-endpoint"><strong>Custom API Endpoint (optional):</strong></label>
       <input type="text" id="custom-endpoint" placeholder="https://api.openai.com/v1/chat/completions" style="width: 100%; margin-top: 4px;" />
       <small class="hint">Leave blank to use default OpenAI endpoint. Useful for OpenAI-compatible APIs.</small>
+    </div>
+    <div style="margin-bottom: 16px;">
+      <label for="token-limit"><strong>Token Limit for Reasoning Models:</strong></label>
+      <input type="number" id="token-limit" placeholder="300" min="50" max="4000" style="width: 100px; margin-top: 4px;" />
+      <small class="hint">Higher limits needed for reasoning models (GPT-5, GPT-o3, o1). Default: 300</small>
     </div>
     <label>
       <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains

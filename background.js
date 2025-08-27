@@ -128,6 +128,11 @@ Additional rules:
     });
     const data = await res.json();
     const answer = data.choices?.[0]?.message?.content?.trim().toUpperCase();
+    
+    // Track API usage
+    const tokensUsed = data.usage?.total_tokens || 0;
+    await trackApiUsage(model, 'classification', tokensUsed);
+    
     return answer === "BLOCK";
   } catch (err) {
     console.error("Classification error", err);
@@ -213,22 +218,67 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
+async function trackApiUsage(model, type, tokens) {
+  const data = await chrome.storage.local.get(["apiUsageStats", "apiUsageHistory"]);
+  const stats = data.apiUsageStats || {};
+  const history = data.apiUsageHistory || [];
+  
+  // Update model stats
+  if (!stats[model]) {
+    stats[model] = {
+      totalCalls: 0,
+      totalTokens: 0,
+      chatCalls: 0,
+      classificationCalls: 0
+    };
+  }
+  
+  stats[model].totalCalls += 1;
+  stats[model].totalTokens += tokens || 0;
+  
+  if (type === 'chat') {
+    stats[model].chatCalls += 1;
+  } else if (type === 'classification') {
+    stats[model].classificationCalls += 1;
+  }
+  
+  // Add to history (keep last 100 entries)
+  history.push({
+    timestamp: Date.now(),
+    model,
+    type,
+    tokens: tokens || 0
+  });
+  
+  if (history.length > 100) {
+    history.splice(0, history.length - 100);
+  }
+  
+  await chrome.storage.local.set({
+    apiUsageStats: stats,
+    apiUsageHistory: history
+  });
+}
+
 async function chatWithGPT(messages) {
   const {
     openaiApiKey,
     openaiTextModel,
     openaiVisionModel,
-    customEndpoint
+    customEndpoint,
+    tokenLimit
   } = await chrome.storage.local.get([
     "openaiApiKey",
     "openaiTextModel",
     "openaiVisionModel",
-    "customEndpoint"
+    "customEndpoint",
+    "tokenLimit"
   ]);
 
   const textModel = openaiTextModel || "gpt-3.5-turbo";
   let visionModel = openaiVisionModel || null;
   const apiEndpoint = customEndpoint || "https://api.openai.com/v1/chat/completions";
+  const maxTokens = parseInt(tokenLimit) || 300;
   
   if (!openaiApiKey) {
     throw new Error("No API key set in options.");
@@ -256,10 +306,9 @@ async function chatWithGPT(messages) {
   const needsCompletionTokens = completionsModels.some(model => modelToUse.includes(model));
   
   if (needsCompletionTokens) {
-    // Reasoning models need more tokens (reasoning + response)
-    requestBody.max_completion_tokens = 1000;
+    requestBody.max_completion_tokens = maxTokens;
   } else {
-    requestBody.max_tokens = 300;
+    requestBody.max_tokens = maxTokens;
   }
 
   console.log("Making API request:", { model: modelToUse, endpoint: apiEndpoint, tokenParam: needsCompletionTokens ? "max_completion_tokens" : "max_tokens" });
@@ -287,6 +336,11 @@ async function chatWithGPT(messages) {
     console.error("No message in response:", data);
     throw new Error("No choices returned from API");
   }
+  
+  // Track API usage
+  const tokensUsed = data.usage?.total_tokens || 0;
+  await trackApiUsage(modelToUse, 'chat', tokensUsed);
+  
   return { reply: message, model: modelToUse };
 }
 

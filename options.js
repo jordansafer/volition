@@ -17,7 +17,8 @@ async function init() {
     "openaiVisionModel",
     "customTextModel",
     "customVisionModel",
-    "customEndpoint"
+    "customEndpoint",
+    "tokenLimit"
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
@@ -50,6 +51,7 @@ async function init() {
   }
 
   $("custom-endpoint").value = data.customEndpoint || "";
+  $("token-limit").value = data.tokenLimit || 300;
   $("neg-prompt").value = data.negotiationPrompt || "";
   $("class-prompt").value = data.classificationPrompt || "";
 
@@ -65,6 +67,7 @@ async function init() {
   $("custom-text-model").addEventListener("input", saveCustomTextModel);
   $("custom-vision-model").addEventListener("input", saveCustomVisionModel);
   $("custom-endpoint").addEventListener("input", saveCustomEndpoint);
+  $("token-limit").addEventListener("input", saveTokenLimit);
   $("save-prompts").addEventListener("click", savePrompts);
   $( "test-key" ).addEventListener("click", testKey);
 }
@@ -183,6 +186,11 @@ async function saveCustomVisionModel() {
 async function saveCustomEndpoint() {
   const endpoint = $("custom-endpoint").value.trim();
   await chrome.storage.local.set({ customEndpoint: endpoint });
+}
+
+async function saveTokenLimit() {
+  const tokenLimit = $("token-limit").value;
+  await chrome.storage.local.set({ tokenLimit: tokenLimit });
 }
 
 async function addDomain(type) {

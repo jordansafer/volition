@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Volition – Usage Statistics</title>
+  <link rel="icon" type="image/png" href="icons/icon32.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Usage Statistics</h1>
+  
+  <nav style="text-align: center; margin-bottom: 20px;">
+    <a href="options.html" style="color: #0066cc; text-decoration: none; margin-right: 16px;">← Back to Settings</a>
+    <button id="reset-stats" style="background: #dc3545; color: white;">Reset All Stats</button>
+  </nav>
+
+  <section class="card">
+    <h2>API Usage Overview</h2>
+    <div id="total-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px;">
+      <div class="stat-box">
+        <div class="stat-number" id="total-calls">0</div>
+        <div class="stat-label">Total API Calls</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="total-tokens">0</div>
+        <div class="stat-label">Total Tokens Used</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="chat-calls">0</div>
+        <div class="stat-label">Chat Calls</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="classification-calls">0</div>
+        <div class="stat-label">Classification Calls</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Usage by Model</h2>
+    <div id="model-stats">
+      <p style="color: #666; text-align: center;">No API calls recorded yet.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Recent Activity</h2>
+    <div id="recent-activity">
+      <p style="color: #666; text-align: center;">No recent activity.</p>
+    </div>
+  </section>
+
+  <script src="stats.js"></script>
+</body>
+</html> 
