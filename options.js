@@ -130,6 +130,7 @@ async function saveKey() {
   const key = $("api-key").value.trim();
   await chrome.storage.local.set({ openaiApiKey: key });
   $("key-status").textContent = "Saved!";
+  $("key-status").style.color = "#28a745";
   setTimeout(() => ($("key-status").textContent = ""), 1500);
 }
 
