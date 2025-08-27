@@ -285,3 +285,30 @@ nav a {
 nav a:hover {
   text-decoration: underline;
 } 
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.stats-table th,
+.stats-table td {
+  border: 1px solid #e0e0e0;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.stats-table thead th {
+  background: #f1f3f5;
+  font-weight: 600;
+}
+
+.stats-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.stats-table a:hover {
+  text-decoration: underline;
+} 

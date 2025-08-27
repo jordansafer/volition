@@ -81,11 +81,11 @@ chrome.storage.local.get(["proofHistory"], (res) => {
   proofHistory = Array.isArray(res.proofHistory) ? res.proofHistory : [];
   if (proofHistory.length) {
     const lines = proofHistory
-      .slice(-5)
+      .slice(-20)
       .reverse()
       .map((e, idx) => `${idx + 1}. ${e.desc} (timestamp ${e.timestamp})`)
       .join("\n");
-    conversation[0].content += `\n\nPrevious proof history (most recent first, max 5):\n${lines}`;
+    conversation[0].content += `\n\nPrevious proof history (most recent first, max 20):\n${lines}`;
   }
 });
 
@@ -181,15 +181,6 @@ sendBtn.addEventListener("click", async () => {
     appendMessage("assistant", reply.content);
 
     if (reply.content.toLowerCase().includes("approved")) {
-      if (lastImageMeta) {
-        // try extract a short description from assistant reply (first sentence)
-        const firstSentence = reply.content.split(/\n/)[0].trim();
-        lastImageMeta.desc = firstSentence.replace(/^APPROVED[^:]*:?/i, "").trim().substring(0, 140) || "User task completed";
-        proofHistory.push(lastImageMeta);
-        while (proofHistory.length > 5) proofHistory.shift();
-        chrome.storage.local.set({ proofHistory });
-        lastImageMeta = null;
-      }
       let domain = null;
       try {
         domain = new URL(originalUrl).hostname;
@@ -197,6 +188,29 @@ sendBtn.addEventListener("click", async () => {
 
       const durationMs = parseDuration(reply.content);
       const expiresAt = durationMs ? Date.now() + durationMs : null;
+
+      // Build proof entry (always record one, with or without image)
+      const firstSentence = reply.content.split(/\n/)[0].trim();
+      const baseEntry = {
+        timestamp: new Date().toISOString(),
+        url: originalUrl,
+        domain: domain || null,
+        approvedMs: durationMs || null,
+        approvedUntil: expiresAt || null,
+        model: currentModel || null,
+        hadImage: !!lastImageMeta,
+        desc: (firstSentence.replace(/^APPROVED[^:]*:?/i, "").trim().substring(0, 140) || "User task completed")
+      };
+
+      if (lastImageMeta) {
+        // Merge any prior image metadata (e.g., upload timestamp)
+        baseEntry.imageTimestamp = lastImageMeta.timestamp;
+      }
+
+      proofHistory.push(baseEntry);
+      while (proofHistory.length > 20) proofHistory.shift();
+      chrome.storage.local.set({ proofHistory });
+      lastImageMeta = null;
 
       if (domain) {
         await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt });

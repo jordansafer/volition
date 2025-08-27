@@ -12,15 +12,18 @@ async function init() {
 async function loadStats() {
   const data = await chrome.storage.local.get([
     "apiUsageStats",
-    "apiUsageHistory"
+    "apiUsageHistory",
+    "proofHistory"
   ]);
   
   const stats = data.apiUsageStats || {};
   const history = data.apiUsageHistory || [];
+  const approvals = Array.isArray(data.proofHistory) ? data.proofHistory.slice(-20).reverse() : [];
   
   displayOverviewStats(stats);
   displayModelStats(stats);
   displayRecentActivity(history);
+  displayApprovals(approvals);
 }
 
 function displayOverviewStats(stats) {
@@ -99,6 +102,58 @@ function displayRecentActivity(history) {
       </div>
     `;
   }).join('');
+}
+
+function displayApprovals(approvals) {
+  const container = $("approvals");
+  if (!approvals.length) {
+    container.innerHTML = '<p style="color: #666; text-align: center;">No approvals yet.</p>';
+    return;
+  }
+
+  const rows = approvals.map((a) => {
+    const when = new Date(a.timestamp || a.imageTimestamp || Date.now()).toLocaleString();
+    const duration = a.approvedMs == null ? "unlimited" : Math.round(a.approvedMs / 60000) + "m";
+    const url = a.url || (a.domain ? `https://${a.domain}` : "");
+    const model = a.model || "";
+    const hadImage = a.hadImage ? "✔" : "—";
+    const desc = a.desc || "";
+
+    return `
+      <tr>
+        <td title="${a.domain || ''}"><a href="${url}" target="_blank" style="color:#0066cc; text-decoration:none;">${a.domain || url}</a></td>
+        <td>${duration}</td>
+        <td>${when}</td>
+        <td>${model}</td>
+        <td style="text-align:center;">${hadImage}</td>
+        <td>${escapeHtml(desc)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Domain/URL</th>
+            <th>Duration</th>
+            <th>Approved At</th>
+            <th>Model</th>
+            <th>Image</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
 async function resetStats() {
