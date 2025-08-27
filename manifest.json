@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Volition-test",
+  "name": "Volition",
   "description": "Blocks distracting websites and negotiates access via ChatGPT to regain focus.",
   "version": "1.0.1",
   "permissions": ["storage", "tabs", "scripting", "activeTab"],
