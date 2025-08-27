@@ -46,14 +46,42 @@ async function init() {
 function renderList(listId, items, type) {
   const ul = $(listId);
   ul.innerHTML = "";
-  items.forEach((entry) => {
+  
+  // Sort items alphabetically
+  const sortedItems = [...items].sort((a, b) => {
+    const domainA = typeof a === "string" ? a : a.domain;
+    const domainB = typeof b === "string" ? b : b.domain;
+    return domainA.toLowerCase().localeCompare(domainB.toLowerCase());
+  });
+  
+  if (sortedItems.length === 0) {
+    const li = document.createElement("li");
+    li.className = "empty-list";
+    li.textContent = "No domains added yet";
+    ul.appendChild(li);
+    return;
+  }
+  
+  sortedItems.forEach((entry) => {
     const domain = typeof entry === "string" ? entry : entry.domain;
     const expiresAt = typeof entry === "object" && entry.expiresAt ? entry.expiresAt : null;
     const li = document.createElement("li");
-    li.textContent = domain + (expiresAt ? ` (expires ${formatExpiry(expiresAt)})` : "");
-    li.style.cursor = "pointer";
-    li.title = "Click to remove";
-    li.addEventListener("click", () => removeDomain(type, domain));
+    
+    const domainSpan = document.createElement("span");
+    domainSpan.className = "domain-text";
+    domainSpan.textContent = domain + (expiresAt ? ` (expires ${formatExpiry(expiresAt)})` : "");
+    
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "remove-btn";
+    removeBtn.innerHTML = "×";
+    removeBtn.title = "Remove domain";
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeDomain(type, domain);
+    });
+    
+    li.appendChild(domainSpan);
+    li.appendChild(removeBtn);
     ul.appendChild(li);
   });
 }
@@ -97,6 +125,13 @@ async function addDomain(type) {
   const exists = list.some((e) => (typeof e === "string" ? e : e.domain) === domain);
   if (!exists) {
     list.push(domain);
+    // Sort the list before saving
+    list.sort((a, b) => {
+      const domainA = typeof a === "string" ? a : a.domain;
+      const domainB = typeof b === "string" ? b : b.domain;
+      return domainA.toLowerCase().localeCompare(domainB.toLowerCase());
+    });
+    await chrome.storage.local.set({ [listKey]: list });
   }
   $(inputId).value = "";
   renderList(listKey, list, type);
