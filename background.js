@@ -360,7 +360,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "allow_domain") {
     (async () => {
       const { domain, durationMinutes, expiresAt } = message;
-      const { allowlist = [] } = await chrome.storage.local.get(["allowlist"]);
+      const { allowlist = [], blocklist = [] } = await chrome.storage.local.get(["allowlist", "blocklist"]);
       // Normalize existing allowlist entries to objects
       const normalized = allowlist.map((d) =>
         typeof d === "string" ? { domain: d, expiresAt: null } : d
@@ -372,7 +372,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       } else {
         normalized[existingIndex].expiresAt = finalExpires;
       }
-      await chrome.storage.local.set({ allowlist: normalized });
+
+      // If this is an unlimited allow (permanent), remove the exact domain from blocklist
+      let updatedBlocklist = blocklist;
+      if (finalExpires === null) {
+        updatedBlocklist = (blocklist || []).filter((e) => (typeof e === "string" ? e : e.domain) !== domain);
+      }
+
+      await chrome.storage.local.set({ allowlist: normalized, blocklist: updatedBlocklist });
       sendResponse({ status: "ok" });
     })();
     return true;

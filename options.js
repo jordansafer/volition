@@ -197,13 +197,15 @@ async function saveTokenLimit() {
 async function addDomain(type) {
   const inputId = type === "block" ? "new-block-domain" : "new-allow-domain";
   const listKey = type === "block" ? "blocklist" : "allowlist";
+  const oppositeListKey = type === "block" ? "allowlist" : "blocklist";
   const domain = $(inputId).value.trim();
   if (!domain) return;
 
-  const data = await chrome.storage.local.get([listKey]);
+  const data = await chrome.storage.local.get([listKey, oppositeListKey]);
   const list = data[listKey] || [];
+  const oppositeList = data[oppositeListKey] || [];
   
-  // Only check for exact duplicates
+  // Only check for exact duplicates in the same list
   const exists = list.some((e) => (typeof e === "string" ? e : e.domain) === domain);
   if (exists) {
     alert(`"${domain}" is already in the ${type}list.`);
@@ -211,16 +213,49 @@ async function addDomain(type) {
     return;
   }
 
+  // Only remove from blocklist when adding PERMANENT allowlist entries
+  // (Manual additions via options are always permanent with expiresAt: null)
+  let updatedOppositeList = oppositeList;
+  if (type === "allow") {
+    // Adding to allowlist - remove from blocklist if it exists
+    const blockExists = oppositeList.some((e) => (typeof e === "string" ? e : e.domain) === domain);
+    if (blockExists) {
+      updatedOppositeList = oppositeList.filter((e) => (typeof e === "string" ? e : e.domain) !== domain);
+      console.log(`Removed "${domain}" from blocklist since it was added to permanent allowlist`);
+    }
+  }
+  // Note: We don't remove from allowlist when adding to blocklist because:
+  // - Temporary allows should be preserved (they'll expire)
+  // - Permanent allows vs blocks should be handled by specificity rules
+
+  // Add to the target list (manual additions are always permanent)
   list.push(domain);
-  // Sort the list before saving
+  
+  // Sort both lists before saving
   list.sort((a, b) => {
     const domainA = typeof a === "string" ? a : a.domain;
     const domainB = typeof b === "string" ? b : b.domain;
     return domainA.toLowerCase().localeCompare(domainB.toLowerCase());
   });
-  await chrome.storage.local.set({ [listKey]: list });
+
+  updatedOppositeList.sort((a, b) => {
+    const domainA = typeof a === "string" ? a : a.domain;
+    const domainB = typeof b === "string" ? b : b.domain;
+    return domainA.toLowerCase().localeCompare(domainB.toLowerCase());
+  });
+
+  // Save both lists
+  await chrome.storage.local.set({ 
+    [listKey]: list,
+    [oppositeListKey]: updatedOppositeList
+  });
+  
   $(inputId).value = "";
+  
+  // Refresh both lists
   renderList(listKey, list, type);
+  const oppositeType = type === "block" ? "allow" : "block";
+  renderList(oppositeListKey, updatedOppositeList, oppositeType);
 }
 
 async function removeDomain(type, domain) {
