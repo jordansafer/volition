@@ -157,9 +157,11 @@ sendBtn.addEventListener("click", async () => {
     messages: conversation
   });
 
+  console.log("Received response:", response);
   sendBtn.disabled = false;
 
   if (response.error) {
+    console.error("Response error:", response.error);
     chatWindow.children[loadingIndex].remove();
     appendMessage("assistant", "Error: " + response.error);
     return;
@@ -168,6 +170,7 @@ sendBtn.addEventListener("click", async () => {
   chatWindow.children[loadingIndex].remove();
 
   if (response.reply && response.reply.content) {
+    console.log("Processing reply:", response.reply);
     const reply = response.reply;
     if (response.model) {
        currentModel = response.model;
@@ -201,6 +204,16 @@ sendBtn.addEventListener("click", async () => {
       window.location.href = originalUrl;
     }
   } else {
+    console.warn("Unexpected response structure:", response);
+    if (response && typeof response === 'object') {
+      // Try to extract any content from the response
+      const content = response.content || response.message?.content || response.choices?.[0]?.message?.content;
+      if (content) {
+        console.log("Found content in alternative structure:", content);
+        appendMessage("assistant", content);
+        return;
+      }
+    }
     appendMessage("assistant", "Sorry, I didn't receive a response. Please try again.");
   }
 });

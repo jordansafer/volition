@@ -70,11 +70,16 @@ async function blockTab(tabId, originalUrl) {
 }
 
 async function classifyDomain(domain) {
-  const { openaiApiKey, classificationPrompt } = await chrome.storage.local.get([
+  const { openaiApiKey, classificationPrompt, customEndpoint, openaiTextModel } = await chrome.storage.local.get([
     "openaiApiKey",
-    "classificationPrompt"
+    "classificationPrompt",
+    "customEndpoint",
+    "openaiTextModel"
   ]);
   if (!openaiApiKey) return false; // default allow when no key set
+
+  const apiEndpoint = customEndpoint || "https://api.openai.com/v1/chat/completions";
+  const model = openaiTextModel || "gpt-3.5-turbo";
 
   const defaultPrompt =
     `You are an automated website-focus reviewer. Your goal is to help users stay productive. You must answer with exactly ONE word: BLOCK or ALLOW (uppercase). BLOCK if the site is likely to distract from focused work, including but not limited to:
@@ -96,20 +101,30 @@ Additional rules:
   const userPrompt = `Should access to \"${domain}\" be blocked? Respond with BLOCK or ALLOW.`;
 
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Use max_completion_tokens for newer models that require it
+    const requestBody = {
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ]
+    };
+    const completionsModels = ["gpt-o3", "o1", "gpt-5"];
+    const needsCompletionTokens = completionsModels.some(modelName => model.includes(modelName));
+    
+    if (needsCompletionTokens) {
+      requestBody.max_completion_tokens = 50;
+    } else {
+      requestBody.max_tokens = 1;
+    }
+
+    const res = await fetch(apiEndpoint, {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + openaiApiKey,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        max_tokens: 1
-      })
+      body: JSON.stringify(requestBody)
     });
     const data = await res.json();
     const answer = data.choices?.[0]?.message?.content?.trim().toUpperCase();
@@ -202,15 +217,19 @@ async function chatWithGPT(messages) {
   const {
     openaiApiKey,
     openaiTextModel,
-    openaiVisionModel
+    openaiVisionModel,
+    customEndpoint
   } = await chrome.storage.local.get([
     "openaiApiKey",
     "openaiTextModel",
-    "openaiVisionModel"
+    "openaiVisionModel",
+    "customEndpoint"
   ]);
 
   const textModel = openaiTextModel || "gpt-3.5-turbo";
   let visionModel = openaiVisionModel || null;
+  const apiEndpoint = customEndpoint || "https://api.openai.com/v1/chat/completions";
+  
   if (!openaiApiKey) {
     throw new Error("No API key set in options.");
   }
@@ -231,24 +250,42 @@ async function chatWithGPT(messages) {
     modelToUse = visionModel;
   }
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  // Use max_completion_tokens for newer models that require it
+  const requestBody = { model: modelToUse, messages };
+  const completionsModels = ["gpt-o3", "o1", "gpt-5"];
+  const needsCompletionTokens = completionsModels.some(model => modelToUse.includes(model));
+  
+  if (needsCompletionTokens) {
+    // Reasoning models need more tokens (reasoning + response)
+    requestBody.max_completion_tokens = 1000;
+  } else {
+    requestBody.max_tokens = 300;
+  }
+
+  console.log("Making API request:", { model: modelToUse, endpoint: apiEndpoint, tokenParam: needsCompletionTokens ? "max_completion_tokens" : "max_tokens" });
+
+  const res = await fetch(apiEndpoint, {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + openaiApiKey,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ model: modelToUse, messages, max_tokens: 300 })
+    body: JSON.stringify(requestBody)
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error("OpenAI API error: " + errText);
+    console.error("API Error Response:", errText);
+    throw new Error("API error: " + errText);
   }
 
   const data = await res.json();
+  console.log("API Response:", data);
+  
   const message = data.choices?.[0]?.message;
   if (!message) {
-    throw new Error("No choices returned from OpenAI");
+    console.error("No message in response:", data);
+    throw new Error("No choices returned from API");
   }
   return { reply: message, model: modelToUse };
 }

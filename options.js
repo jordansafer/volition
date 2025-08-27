@@ -14,7 +14,10 @@ async function init() {
     "classificationPrompt",
     "openaiModel", // legacy single model
     "openaiTextModel",
-    "openaiVisionModel"
+    "openaiVisionModel",
+    "customTextModel",
+    "customVisionModel",
+    "customEndpoint"
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
@@ -24,9 +27,29 @@ async function init() {
   }
   $("advanced-mode").checked = data.advancedMode || false;
 
-  $("text-model-select").value = data.openaiTextModel || data.openaiModel || "gpt-3.5-turbo";
-  $("vision-model-select").value = data.openaiVisionModel || "gpt-4o-mini";
+  // Handle text model selection
+  const textModel = data.openaiTextModel || data.openaiModel || "gpt-3.5-turbo";
+  const isCustomText = !["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o", "gpt-o3"].includes(textModel);
+  if (isCustomText) {
+    $("text-model-select").value = "other";
+    $("custom-text-model").value = textModel;
+    $("custom-text-model").style.display = "inline-block";
+  } else {
+    $("text-model-select").value = textModel;
+  }
 
+  // Handle vision model selection  
+  const visionModel = data.openaiVisionModel || "gpt-4o-mini";
+  const isCustomVision = !["gpt-4o-mini", "gpt-4o", "gpt-o3"].includes(visionModel);
+  if (isCustomVision) {
+    $("vision-model-select").value = "other";
+    $("custom-vision-model").value = visionModel;
+    $("custom-vision-model").style.display = "inline-block";
+  } else {
+    $("vision-model-select").value = visionModel;
+  }
+
+  $("custom-endpoint").value = data.customEndpoint || "";
   $("neg-prompt").value = data.negotiationPrompt || "";
   $("class-prompt").value = data.classificationPrompt || "";
 
@@ -37,8 +60,11 @@ async function init() {
   $("add-block").addEventListener("click", () => addDomain("block"));
   $("add-allow").addEventListener("click", () => addDomain("allow"));
   $("advanced-mode").addEventListener("change", saveAdvancedMode);
-  $("text-model-select").addEventListener("change", saveTextModel);
-  $("vision-model-select").addEventListener("change", saveVisionModel);
+  $("text-model-select").addEventListener("change", handleTextModelChange);
+  $("vision-model-select").addEventListener("change", handleVisionModelChange);
+  $("custom-text-model").addEventListener("input", saveCustomTextModel);
+  $("custom-vision-model").addEventListener("input", saveCustomVisionModel);
+  $("custom-endpoint").addEventListener("input", saveCustomEndpoint);
   $("save-prompts").addEventListener("click", savePrompts);
   $( "test-key" ).addEventListener("click", testKey);
 }
@@ -112,6 +138,51 @@ async function saveTextModel() {
 async function saveVisionModel() {
   const model = $("vision-model-select").value;
   await chrome.storage.local.set({ openaiVisionModel: model });
+}
+
+function handleTextModelChange() {
+  const selectedValue = $("text-model-select").value;
+  const customInput = $("custom-text-model");
+  
+  if (selectedValue === "other") {
+    customInput.style.display = "inline-block";
+    customInput.focus();
+  } else {
+    customInput.style.display = "none";
+    saveTextModel();
+  }
+}
+
+function handleVisionModelChange() {
+  const selectedValue = $("vision-model-select").value;
+  const customInput = $("custom-vision-model");
+  
+  if (selectedValue === "other") {
+    customInput.style.display = "inline-block";
+    customInput.focus();
+  } else {
+    customInput.style.display = "none";
+    saveVisionModel();
+  }
+}
+
+async function saveCustomTextModel() {
+  const customModel = $("custom-text-model").value.trim();
+  if (customModel) {
+    await chrome.storage.local.set({ openaiTextModel: customModel });
+  }
+}
+
+async function saveCustomVisionModel() {
+  const customModel = $("custom-vision-model").value.trim();
+  if (customModel) {
+    await chrome.storage.local.set({ openaiVisionModel: customModel });
+  }
+}
+
+async function saveCustomEndpoint() {
+  const endpoint = $("custom-endpoint").value.trim();
+  await chrome.storage.local.set({ customEndpoint: endpoint });
 }
 
 async function addDomain(type) {

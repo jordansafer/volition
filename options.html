@@ -24,14 +24,18 @@
         <option value="gpt-4o-mini">gpt-4o-mini</option>
         <option value="gpt-4o">gpt-4o</option>
         <option value="gpt-o3">gpt-o3</option>
+        <option value="other">Other (custom)</option>
       </select>
+      <input type="text" id="custom-text-model" placeholder="Enter custom model name" style="display:none; margin-right:12px;" />
 
       <label for="vision-model-select"><strong>Vision model:</strong></label>
       <select id="vision-model-select">
         <option value="gpt-4o-mini">gpt-4o-mini (default)</option>
         <option value="gpt-4o">gpt-4o</option>
         <option value="gpt-o3">gpt-o3</option>
+        <option value="other">Other (custom)</option>
       </select>
+      <input type="text" id="custom-vision-model" placeholder="Enter custom model name" style="display:none;" />
     </div>
   </section>
 
@@ -59,6 +63,12 @@
     <span id="prompt-status"></span>
   </section>
   <section class="card">
+    <h2>Advanced Settings</h2>
+    <div style="margin-bottom: 16px;">
+      <label for="custom-endpoint"><strong>Custom API Endpoint (optional):</strong></label>
+      <input type="text" id="custom-endpoint" placeholder="https://api.openai.com/v1/chat/completions" style="width: 100%; margin-top: 4px;" />
+      <small class="hint">Leave blank to use default OpenAI endpoint. Useful for OpenAI-compatible APIs.</small>
+    </div>
     <label>
       <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains
     </label>
