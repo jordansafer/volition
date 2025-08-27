@@ -37,12 +37,14 @@
 
   <section class="card">
     <h2>Blocklist</h2>
+    <small class="hint">Domains automatically block all subdomains (e.g., "youtube.com" blocks "www.youtube.com", "m.youtube.com", etc.)</small>
     <ul id="blocklist"></ul>
     <input type="text" id="new-block-domain" placeholder="example.com" />
     <button id="add-block">Add</button>
   </section>
   <section class="card">
     <h2>Allowlist</h2>
+    <small class="hint">Domains automatically allow all subdomains. More specific rules override general ones.</small>
     <ul id="allowlist"></ul>
     <input type="text" id="new-allow-domain" placeholder="example.com" />
     <button id="add-allow">Add</button>

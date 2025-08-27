@@ -122,17 +122,23 @@ async function addDomain(type) {
 
   const data = await chrome.storage.local.get([listKey]);
   const list = data[listKey] || [];
+  
+  // Only check for exact duplicates
   const exists = list.some((e) => (typeof e === "string" ? e : e.domain) === domain);
-  if (!exists) {
-    list.push(domain);
-    // Sort the list before saving
-    list.sort((a, b) => {
-      const domainA = typeof a === "string" ? a : a.domain;
-      const domainB = typeof b === "string" ? b : b.domain;
-      return domainA.toLowerCase().localeCompare(domainB.toLowerCase());
-    });
-    await chrome.storage.local.set({ [listKey]: list });
+  if (exists) {
+    alert(`"${domain}" is already in the ${type}list.`);
+    $(inputId).value = "";
+    return;
   }
+
+  list.push(domain);
+  // Sort the list before saving
+  list.sort((a, b) => {
+    const domainA = typeof a === "string" ? a : a.domain;
+    const domainB = typeof b === "string" ? b : b.domain;
+    return domainA.toLowerCase().localeCompare(domainB.toLowerCase());
+  });
+  await chrome.storage.local.set({ [listKey]: list });
   $(inputId).value = "";
   renderList(listKey, list, type);
 }

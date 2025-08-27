@@ -1,22 +1,13 @@
 const DEFAULT_BLOCKLIST = [
   "facebook.com",
-  "www.facebook.com",
-  "twitter.com",
-  "www.twitter.com",
+  "twitter.com", 
   "instagram.com",
-  "www.instagram.com",
   "youtube.com",
-  "www.youtube.com",
   "tiktok.com",
-  "www.tiktok.com",
   "reddit.com",
-  "www.reddit.com",
   "cnn.com",
-  "www.cnn.com",
   "foxnews.com",
-  "www.foxnews.com",
-  "nytimes.com",
-  "www.nytimes.com"
+  "nytimes.com"
 ];
 
 // Initialize default settings on install
@@ -39,6 +30,38 @@ function getDomain(url) {
   } catch {
     return "";
   }
+}
+
+// Check if a domain matches a pattern (supports wildcards)
+function domainMatches(domain, pattern) {
+  // Exact match
+  if (domain === pattern) return true;
+  
+  // Wildcard subdomain match: pattern "example.com" matches "sub.example.com"
+  if (domain.endsWith('.' + pattern)) return true;
+  
+  return false;
+}
+
+// Find the most specific matching rule from a list
+function findBestMatch(domain, ruleList) {
+  let bestMatch = null;
+  let bestSpecificity = -1;
+  
+  for (const rule of ruleList) {
+    const rulePattern = typeof rule === "string" ? rule : rule.domain;
+    
+    if (domainMatches(domain, rulePattern)) {
+      // Calculate specificity: more dots = more specific
+      const specificity = rulePattern.split('.').length;
+      if (specificity > bestSpecificity) {
+        bestMatch = rule;
+        bestSpecificity = specificity;
+      }
+    }
+  }
+  
+  return bestMatch;
 }
 
 async function blockTab(tabId, originalUrl) {
@@ -111,25 +134,48 @@ async function handleUrl(tabId, url) {
     typeof d === "string" ? { domain: d, expiresAt: null } : d
   );
 
-  const allowEntry = normalizedAllow.find((e) => e.domain === domain);
-  if (allowEntry) {
-    if (allowEntry.expiresAt && Date.now() > allowEntry.expiresAt) {
-      // expired, remove
-      await chrome.storage.local.set({
-        allowlist: normalizedAllow.filter((e) => e.domain !== domain)
-      });
-      // fall through to block check
-    } else {
-      await injectTimer(tabId, allowEntry.expiresAt);
-      return; // allowed
-    }
+  // Find the best matches from both lists
+  let allowMatch = findBestMatch(domain, normalizedAllow);
+  let blockMatch = findBestMatch(domain, blocklist.map(d => typeof d === "string" ? d : d.domain));
+
+  // Check for expired allowlist entries
+  if (allowMatch && allowMatch.expiresAt && Date.now() > allowMatch.expiresAt) {
+    // Remove expired entry
+    await chrome.storage.local.set({
+      allowlist: normalizedAllow.filter((e) => e.domain !== allowMatch.domain)
+    });
+    // Treat as if no allow match
+    allowMatch = null;
   }
 
-  if (blocklist.includes(domain)) {
+  // Calculate specificity for comparison (after expiry check)
+  const allowSpecificity = allowMatch ? allowMatch.domain.split('.').length : -1;
+  const blockSpecificity = blockMatch ? blockMatch.split('.').length : -1;
+
+  // Determine action based on specificity
+  if (allowSpecificity > blockSpecificity) {
+    // Allow rule is more specific, allow access
+    await injectTimer(tabId, allowMatch.expiresAt);
+    return;
+  } else if (blockSpecificity > allowSpecificity) {
+    // Block rule is more specific, block access
+    await blockTab(tabId, url);
+    return;
+  } else if (allowMatch && blockMatch) {
+    // Same specificity, allow access until expiry
+    await injectTimer(tabId, allowMatch.expiresAt);
+    return;
+  } else if (allowMatch) {
+    // Only allow rule exists
+    await injectTimer(tabId, allowMatch.expiresAt);
+    return;
+  } else if (blockMatch) {
+    // Only block rule exists
     await blockTab(tabId, url);
     return;
   }
 
+  // No explicit rules, use advanced mode if enabled
   if (advancedMode) {
     const shouldBlock = await classifyDomain(domain);
     if (shouldBlock) {
