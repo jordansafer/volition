@@ -45,6 +45,14 @@
   </section>
 
   <section class="card">
+    <label class="inline-with-tooltip">
+      <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains
+      <span class="info" tabindex="0" aria-label="Info" aria-describedby="adv-tip">ℹ️</span>
+      <span role="tooltip" id="adv-tip" class="tooltip">If a URL is not covered by your blocklist or allowlist, it is sent to the LLM which decides whether to allow or block it and updates the appropriate list.</span>
+    </label>
+  </section>
+
+  <section class="card">
     <h2>Blocklist</h2>
     <small class="hint">Domains automatically block all subdomains (e.g., "youtube.com" blocks "www.youtube.com", "m.youtube.com", etc.)</small>
     <ul id="blocklist"></ul>
@@ -87,9 +95,6 @@
       </div>
       <small class="hint">Adjust the chat font size on the blocked page.</small>
     </div>
-    <label>
-      <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains
-    </label>
   </section>
   <script src="options.js"></script>
 </body>

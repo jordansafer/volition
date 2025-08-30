@@ -322,3 +322,80 @@ nav a:hover {
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
 } 
+
+/* Info icon */
+.info {
+  display: inline-block;
+  margin-left: 6px;
+  cursor: help;
+  font-size: 14px;
+  line-height: 1;
+  vertical-align: middle;
+} 
+
+/* Inline label + tooltip layout */
+.inline-with-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Custom tooltip */
+.tooltip {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 6px;
+  max-width: 420px;
+  background: #333;
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.05s ease;
+  z-index: 5;
+}
+
+/* Arrow */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #333 transparent;
+}
+
+/* Show instantly on hover/focus */
+.inline-with-tooltip .info:hover + .tooltip,
+.inline-with-tooltip .info:focus + .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Ensure hover over tooltip keeps it open */
+.inline-with-tooltip .tooltip:hover {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Improve icon hit area */
+.info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eef3fb;
+  color: #0066cc;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: help;
+} 
