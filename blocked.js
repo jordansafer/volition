@@ -117,9 +117,26 @@ function appendMessage(role, content) {
   const div = document.createElement("div");
   div.className = `bubble ${role === "user" ? "user-msg" : "assistant-msg"}`;
   div.textContent = content;
+  div.dir = "auto";
+  if (/[  -  ]/.test(content)) {
+    // leave as textContent already
+  }
+  // Detect Hebrew characters and tag for stronger font styling
+  if (/[ 90-\u05FF]/.test(content)) {
+    div.classList.add("he-text");
+  }
   chatWindow.appendChild(div);
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
+
+// Toggle Hebrew styling on textarea as user types
+userInput.addEventListener("input", () => {
+  if (/[\u0590-\u05FF]/.test(userInput.value)) {
+    userInput.classList.add("he-text");
+  } else {
+    userInput.classList.remove("he-text");
+  }
+});
 
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();

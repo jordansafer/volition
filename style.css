@@ -210,6 +210,7 @@ li:hover {
    border-radius: 10px;
    margin-bottom: 6px;
    word-wrap: break-word;
+   unicode-bidi: plaintext;
  }
  .user-msg {
    background: #e8e8e8;
@@ -311,4 +312,13 @@ nav a:hover {
 
 .stats-table a:hover {
   text-decoration: underline;
+} 
+
+/* Hebrew text improvements */
+.he-text {
+  font-family: "Arial Hebrew", "Noto Sans Hebrew", "Heebo", "Rubik", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
 } 
