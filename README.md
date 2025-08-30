@@ -92,17 +92,15 @@ LLMs across company and tiers are at a variety of price points, so you can adjus
 
 Also, if you haven't tried other focus blockers, here are some great ones! Personally, I find delayed gratification blockers to be a step above traditional time blockers in terms of effectiveness. Although also personally, I made Volition for myself to address some limitations of delayed gratification, so this is what I currently use.
 
-| Logo | Name | Type |
-|------|------|------|
-| <img alt="One Sec" src="https://oneseclabs.com/favicon.ico" width="20" height="20" /> | [One Sec](https://oneseclabs.com/) | Delayed Gratification |
-| — | Dopanope | Delayed Gratification |
-| <img alt="RescueTime" src="https://www.rescuetime.com/favicon.ico" width="20" height="20" /> | [RescueTime](https://www.rescuetime.com/) | Traditional Time/Productivity Tracker |
-| — | [LeechBlock](https://www.proginosko.com/leechblock/) | Traditional Site Blocker |
-| — | StayFocusd | Traditional Site Blocker |
-| <img alt="ScreenZen" src="https://screenzen.co/favicon.ico" width="20" height="20" /> | [ScreenZen](https://screenzen.co/) | Mobile (iOS/Android) |
-| <img alt="Apple" src="https://www.apple.com/favicon.ico" width="20" height="20" /> | [Apple Parental Controls](https://support.apple.com/HT201304) | Mobile (iOS) |
-
-Logos are trademarks of their respective owners and used here for identification only.
+| Name | Type |
+|------|------|
+| [One Sec](https://oneseclabs.com/) | Delayed Gratification |
+| Dopanope | Delayed Gratification |
+| [RescueTime](https://www.rescuetime.com/) | Traditional Time/Productivity Tracker |
+| [LeechBlock](https://www.proginosko.com/leechblock/) | Traditional Site Blocker |
+| StayFocusd | Traditional Site Blocker |
+| [ScreenZen](https://screenzen.co/) | Mobile (iOS/Android) |
+| [Apple Parental Controls](https://support.apple.com/HT201304) | Mobile (iOS) |
 
 ---
 
