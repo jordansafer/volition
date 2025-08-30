@@ -73,6 +73,39 @@ See [PRIVACY.md](./PRIVACY.md).  In short: all data remains local; the extension
 
 ---
 
+## ❓ FAQ
+
+### If other focus extensions have not worked for you, because you always end up disabling them or switching to another device where the extension is not setup.
+How Volition approaches this: Similar to delayed gratification, you can always get through, so there is never a reason to disable/switch. Unlike delayed gratification, you can work with an LLM, adjust the prompt, etc, to get granular time limited to approval to sites you need, when you need them.
+
+### If you have trouble breaking tasks into steps, or getting started on things.
+How Volition approaches this: LLM forces you to spend a couple minutes on a task, with a concrete deliverable, before accessing your distracting site. You get your inertia, you get access to the site you wanted, and the LLM gives time limited access to disrupt any scroll cycle. It's a win-win-win.
+
+### If you find new distracting sites that aren't in your site blocker.
+How Volition approaches this: The LLM reviews every new URL you visit, and determines whether the site is distracting. You can customize the prompt to help the LLM make more granular determinations that work best for you.
+
+### If you are concerned about privacy.
+The LLM endpoint is customizable, so you can provide your own LLM, this is recommended as the most private option. If you are using the default endpoint (OpenAI), Volition only ever sends: (1) the URL you visit and (2) your chat with the LLM to the endpoint. The code is fully opensource, so you can review the exact behavior and contents that are transmitted, the content of the pages you visit will never be accessed.
+
+### If you are concerned about cost.
+LLMs across company and tiers are at a variety of price points, so you can adjust the model to your pricepoint. Some LLM offerings, like Gemini flash models, are offered for free. Please be aware that these free offerings may train on your data (data privacy concern tradeoff), as your data can become the product for the company. If you prefer a cheap but data private model, consider a paid, cheap model.
+
+Also, if you haven't tried other focus blockers, here are some great ones! Personally, I find delayed gratification blockers to be a step above traditional time blockers in terms of effectiveness. Although also personally, I made Volition for myself to address some limitations of delayed gratification, so this is what I currently use.
+
+| Logo | Name | Type |
+|------|------|------|
+| <img alt="One Sec" src="https://oneseclabs.com/favicon.ico" width="20" height="20" /> | [One Sec](https://oneseclabs.com/) | Delayed Gratification |
+| — | Dopanope | Delayed Gratification |
+| <img alt="RescueTime" src="https://www.rescuetime.com/favicon.ico" width="20" height="20" /> | [RescueTime](https://www.rescuetime.com/) | Traditional Time/Productivity Tracker |
+| — | [LeechBlock](https://www.proginosko.com/leechblock/) | Traditional Site Blocker |
+| — | StayFocusd | Traditional Site Blocker |
+| <img alt="ScreenZen" src="https://screenzen.co/favicon.ico" width="20" height="20" /> | [ScreenZen](https://screenzen.co/) | Mobile (iOS/Android) |
+| <img alt="Apple" src="https://www.apple.com/favicon.ico" width="20" height="20" /> | [Apple Parental Controls](https://support.apple.com/HT201304) | Mobile (iOS) |
+
+Logos are trademarks of their respective owners and used here for identification only.
+
+---
+
 ## 📄 License
 
 MIT © 2025
