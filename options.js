@@ -18,7 +18,8 @@ async function init() {
     "customTextModel",
     "customVisionModel",
     "customEndpoint",
-    "tokenLimit"
+    "tokenLimit",
+    "chatFontSize"
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
@@ -55,6 +56,11 @@ async function init() {
   $("neg-prompt").value = data.negotiationPrompt || "";
   $("class-prompt").value = data.classificationPrompt || "";
 
+  // Chat font size
+  const fontSize = Number.isFinite(Number(data.chatFontSize)) ? Number(data.chatFontSize) : 16;
+  $("chat-font-size").value = fontSize;
+  $("chat-font-size-label").textContent = fontSize + "px";
+
   renderList("blocklist", data.blocklist || [], "block");
   renderList("allowlist", data.allowlist || [], "allow");
 
@@ -68,6 +74,7 @@ async function init() {
   $("custom-vision-model").addEventListener("input", saveCustomVisionModel);
   $("custom-endpoint").addEventListener("input", saveCustomEndpoint);
   $("token-limit").addEventListener("input", saveTokenLimit);
+  $("chat-font-size").addEventListener("input", saveChatFontSize);
   $("save-prompts").addEventListener("click", savePrompts);
   $( "test-key" ).addEventListener("click", testKey);
 }
@@ -320,4 +327,10 @@ async function testKey() {
   } finally {
     $("test-key").disabled = false;
   }
+} 
+
+async function saveChatFontSize() {
+  const val = parseInt($("chat-font-size").value, 10);
+  $("chat-font-size-label").textContent = val + "px";
+  await chrome.storage.local.set({ chatFontSize: val });
 } 

@@ -79,6 +79,14 @@
       <input type="number" id="token-limit" placeholder="300" min="50" max="4000" style="width: 100px; margin-top: 4px;" />
       <small class="hint">Higher limits needed for reasoning models (GPT-5, GPT-o3, o1). Default: 300</small>
     </div>
+    <div style="margin-bottom: 16px;">
+      <label for="chat-font-size"><strong>Chat Font Size:</strong></label>
+      <div class="input-row" style="margin-top: 6px;">
+        <input type="range" id="chat-font-size" min="12" max="24" step="1" />
+        <span id="chat-font-size-label" style="min-width:40px; text-align:right;">16px</span>
+      </div>
+      <small class="hint">Adjust the chat font size on the blocked page.</small>
+    </div>
     <label>
       <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains
     </label>

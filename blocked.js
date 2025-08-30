@@ -288,4 +288,23 @@ imageUpload.addEventListener("change",()=>{
   } else {
     document.getElementById("upload-label").textContent="📷 Upload Image";
   }
+});
+
+// Apply chat font size from settings
+chrome.storage.local.get(["chatFontSize"], (res) => {
+  const size = parseInt(res.chatFontSize, 10);
+  if (Number.isFinite(size)) {
+    chatWindow.style.fontSize = size + "px";
+    userInput.style.fontSize = size + "px";
+  }
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.chatFontSize) {
+    const size = parseInt(changes.chatFontSize.newValue, 10);
+    if (Number.isFinite(size)) {
+      chatWindow.style.fontSize = size + "px";
+      userInput.style.fontSize = size + "px";
+    }
+  }
 }); 
