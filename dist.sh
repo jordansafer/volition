@@ -16,14 +16,12 @@ rsync -a ./ dist/ \
   --exclude "node_modules" \
   --exclude "*.zip" \
   --exclude "*.DS_Store" \
-  # Exclude docs and large media
   --exclude "docs/" \
   --exclude "docs/**" \
   --exclude "*.mp4" \
   --exclude "*.mov" \
   --exclude "*.avi" \
   --exclude "*.gif" \
-  # Exclude unused icon variants/logos (keep icon16/32/48/128 only)
   --exclude "icons/volition_*" \
   --exclude "icons/*.svg"
 
