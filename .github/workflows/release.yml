@@ -49,19 +49,18 @@ jobs:
 
       - name: Upload to the Chrome Web Store
         env:
+          PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
           CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
         run: |
+          # No subcommand uploads *and* submits for review; "upload" leaves a draft.
           # Manual runs honour the checkbox; tag pushes always submit for review.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" != "true" ]; then
-            PUBLISH_FLAG=""
+            COMMAND="upload"
             echo "Uploading as a draft (no review submission)."
           else
-            PUBLISH_FLAG="--auto-publish"
+            COMMAND=""
             echo "Uploading and submitting for review."
           fi
-          npx --yes chrome-webstore-upload-cli@3 upload \
-            --source volition-dist.zip \
-            --extension-id "$EXTENSION_ID" \
-            $PUBLISH_FLAG
+          npx --yes chrome-webstore-upload-cli@4 $COMMAND --source volition-dist.zip

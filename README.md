@@ -64,15 +64,21 @@ The workflow refuses to run if the tag and `manifest.json` disagree. You can als
 by hand from the **Actions** tab, unchecking *publish* to leave a draft in the dashboard
 instead of submitting for review.
 
-It needs three repository secrets (Settings → Secrets and variables → Actions):
+It needs four repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Where it comes from |
 |--------|---------------------|
+| `CHROME_PUBLISHER_ID` | Web Store dashboard → Account. Required by the v2 upload API. |
 | `CHROME_CLIENT_ID` | OAuth 2.0 **Desktop app** client in a Google Cloud project with the *Chrome Web Store API* enabled. |
 | `CHROME_CLIENT_SECRET` | Same OAuth client. |
-| `CHROME_REFRESH_TOKEN` | One-time consent flow for that client, with scope `https://www.googleapis.com/auth/chromewebstore`. |
+| `CHROME_REFRESH_TOKEN` | `npx chrome-webstore-upload-keys`, scope `https://www.googleapis.com/auth/chromewebstore`. |
 
 The extension ID is not a secret — it lives in the workflow's `env` block.
+
+> **Keep the OAuth consent screen in "In production", not "Testing."** Refresh tokens issued
+> by an app in Testing status expire after 7 days, which silently breaks the release job.
+> In production they do not expire on a schedule, but an unused token dies after 6 months —
+> if you go that long between releases, regenerate it.
 
 ---
 
