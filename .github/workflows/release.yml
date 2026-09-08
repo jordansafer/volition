@@ -1,0 +1,67 @@
+name: Release to Chrome Web Store
+
+# Push a tag like v1.1.0 to ship that version, or run this workflow manually
+# from the Actions tab (optionally leaving it as an unpublished draft).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Submit for review after upload (uncheck to leave a draft in the dashboard)"
+        type: boolean
+        default: true
+
+env:
+  # Public: this is the ID in the store listing URL, not a secret.
+  EXTENSION_ID: iempmfmcjgjdpmobhlaookjjjmbfiaeh
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check manifest version matches the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          MANIFEST_VERSION="$(node -p "require('./manifest.json').version")"
+          if [ "$TAG_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME says $TAG_VERSION but manifest.json says $MANIFEST_VERSION. Bump manifest.json (and package.json) first."
+            exit 1
+          fi
+          echo "Releasing version $MANIFEST_VERSION"
+
+      - name: Build extension zip
+        run: npm run build
+
+      - name: Keep the zip on the workflow run
+        uses: actions/upload-artifact@v4
+        with:
+          name: volition-dist
+          path: volition-dist.zip
+
+      - name: Upload to the Chrome Web Store
+        env:
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          # Manual runs honour the checkbox; tag pushes always submit for review.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.publish }}" != "true" ]; then
+            PUBLISH_FLAG=""
+            echo "Uploading as a draft (no review submission)."
+          else
+            PUBLISH_FLAG="--auto-publish"
+            echo "Uploading and submitting for review."
+          fi
+          npx --yes chrome-webstore-upload-cli@3 upload \
+            --source volition-dist.zip \
+            --extension-id "$EXTENSION_ID" \
+            $PUBLISH_FLAG

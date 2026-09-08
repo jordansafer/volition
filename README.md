@@ -19,6 +19,7 @@ https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
 | Default block-list | Ships with major social, news, and video sites pre-blocked. |
 | ChatGPT negotiation | When you attempt to visit a blocked site, you must convince ChatGPT (via your own API key) to grant access. |
 | Timed overrides | ChatGPT can grant 10 s, 5 min, 2 h, or unlimited access. A badge shows time remaining; the page re-blocks automatically. |
+| Timed pause | Pause blocking for N hours from the options page; every site is allowed until the timer runs out, then blocking resumes on its own. |
 | Advanced auto-review | Unknown domains are sent to ChatGPT for quick **BLOCK / ALLOW** classification. |
 | Proof with images | Upload a (down-sampled) screenshot/photo to prove you completed a task; ChatGPT reviews it (vision model required). |
 | Model selector | gpt-3.5-turbo, gpt-4o-mini, gpt-4o, or gpt-o3. |
@@ -49,6 +50,29 @@ https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
 npm run build   # or just:  bash dist.sh
 ```
 This script creates a **dist/** directory without the Git repo and makes `volition-dist.zip`, ready for upload.
+
+### Automated releases
+
+`.github/workflows/release.yml` builds the zip and uploads it to the Chrome Web Store.
+Bump the version in `manifest.json` **and** `package.json`, then push a matching tag:
+
+```
+git tag v1.1.0 && git push origin v1.1.0
+```
+
+The workflow refuses to run if the tag and `manifest.json` disagree. You can also trigger it
+by hand from the **Actions** tab, unchecking *publish* to leave a draft in the dashboard
+instead of submitting for review.
+
+It needs three repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Where it comes from |
+|--------|---------------------|
+| `CHROME_CLIENT_ID` | OAuth 2.0 **Desktop app** client in a Google Cloud project with the *Chrome Web Store API* enabled. |
+| `CHROME_CLIENT_SECRET` | Same OAuth client. |
+| `CHROME_REFRESH_TOKEN` | One-time consent flow for that client, with scope `https://www.googleapis.com/auth/chromewebstore`. |
+
+The extension ID is not a secret — it lives in the workflow's `env` block.
 
 ---
 

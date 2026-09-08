@@ -53,6 +53,19 @@
   </section>
 
   <section class="card">
+    <h2>Pause Blocking</h2>
+    <small class="hint">Temporarily allow every site. Blocking resumes automatically when the timer runs out.</small>
+    <div class="input-row" style="margin-top: 8px;">
+      <label for="pause-hours">Pause for</label>
+      <input type="number" id="pause-hours" value="1" min="0.25" max="24" step="0.25" style="width: 80px;" />
+      <label for="pause-hours">hours</label>
+      <button id="pause-btn">Pause</button>
+      <button id="resume-btn" style="display:none;">Resume now</button>
+    </div>
+    <span id="pause-status"></span>
+  </section>
+
+  <section class="card">
     <h2>Blocklist</h2>
     <small class="hint">Domains automatically block all subdomains (e.g., "youtube.com" blocks "www.youtube.com", "m.youtube.com", etc.)</small>
     <ul id="blocklist"></ul>

@@ -140,9 +140,23 @@ Additional rules:
   }
 }
 
+// Global pause: when active, every site is allowed until the timestamp passes.
+async function getPauseUntil() {
+  const { pauseUntil } = await chrome.storage.local.get(["pauseUntil"]);
+  if (typeof pauseUntil !== "number") return null;
+  if (Date.now() >= pauseUntil) {
+    await chrome.storage.local.remove("pauseUntil");
+    return null;
+  }
+  return pauseUntil;
+}
+
 async function handleUrl(tabId, url) {
   const domain = getDomain(url);
   if (!domain) return;
+
+  // While paused, allow everything without consulting the lists or the LLM.
+  if (await getPauseUntil()) return;
 
   const { blocklist = [], allowlist = [], advancedMode = false } = await chrome.storage.local.get([
     "blocklist",

@@ -19,7 +19,9 @@ async function init() {
     "customVisionModel",
     "customEndpoint",
     "tokenLimit",
-    "chatFontSize"
+    "chatFontSize",
+    "pauseUntil",
+    "pauseHours"
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
@@ -75,6 +77,13 @@ async function init() {
   $("custom-endpoint").addEventListener("input", saveCustomEndpoint);
   $("token-limit").addEventListener("input", saveTokenLimit);
   $("chat-font-size").addEventListener("input", saveChatFontSize);
+  // Pause blocking
+  $("pause-hours").value = data.pauseHours || 1;
+  $("pause-btn").addEventListener("click", startPause);
+  $("resume-btn").addEventListener("click", endPause);
+  refreshPauseUI();
+  setInterval(refreshPauseUI, 30000);
+
   $("save-prompts").addEventListener("click", savePrompts);
   $( "test-key" ).addEventListener("click", testKey);
 }
@@ -333,4 +342,40 @@ async function saveChatFontSize() {
   const val = parseInt($("chat-font-size").value, 10);
   $("chat-font-size-label").textContent = val + "px";
   await chrome.storage.local.set({ chatFontSize: val });
-} 
+}
+
+async function refreshPauseUI() {
+  const { pauseUntil } = await chrome.storage.local.get(["pauseUntil"]);
+  const active = typeof pauseUntil === "number" && pauseUntil > Date.now();
+
+  if (active) {
+    $("pause-status").textContent = `⏸ Blocking paused – resumes ${formatExpiry(pauseUntil)}.`;
+    $("pause-status").style.color = "#b26a00";
+    $("pause-btn").textContent = "Extend pause";
+    $("resume-btn").style.display = "inline-block";
+  } else {
+    if (pauseUntil) await chrome.storage.local.remove("pauseUntil");
+    $("pause-status").textContent = "";
+    $("pause-btn").textContent = "Pause";
+    $("resume-btn").style.display = "none";
+  }
+}
+
+async function startPause() {
+  const hours = parseFloat($("pause-hours").value);
+  if (!Number.isFinite(hours) || hours <= 0) {
+    $("pause-status").textContent = "Enter a number of hours greater than 0.";
+    $("pause-status").style.color = "#cc0000";
+    return;
+  }
+  await chrome.storage.local.set({
+    pauseUntil: Date.now() + hours * 60 * 60 * 1000,
+    pauseHours: hours
+  });
+  refreshPauseUI();
+}
+
+async function endPause() {
+  await chrome.storage.local.remove("pauseUntil");
+  refreshPauseUI();
+}
