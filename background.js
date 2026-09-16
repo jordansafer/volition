@@ -10,7 +10,7 @@ const DEFAULT_BLOCKLIST = [
   "nytimes.com"
 ];
 const DEFAULT_REALLY_BAD_SITES = ["facebook.com", "reddit.com", "youtube.com"];
-const FREE_NEGOTIATION_URL = "https://volition-ai-backend-9691w9.v2.appdeploy.ai/api/negotiate";
+const FREE_NEGOTIATION_URL = "https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate";
 
 async function getAIProvider() {
   const { aiProvider } = await chrome.storage.local.get(["aiProvider"]);

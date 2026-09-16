@@ -4,7 +4,7 @@
   "description": "Blocks distracting websites and negotiates access via ChatGPT to regain focus.",
   "version": "1.1.2",
   "permissions": ["storage", "tabs", "scripting", "activeTab"],
-  "host_permissions": ["<all_urls>", "https://api.openai.com/*", "https://volition-ai-backend-9691w9.v2.appdeploy.ai/*"],
+  "host_permissions": ["<all_urls>", "https://api.openai.com/*", "https://volition-free-api-jordansafers-projects.vercel.app/*"],
   "background": {
     "service_worker": "background.js"
   },

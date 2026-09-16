@@ -23,7 +23,7 @@ Data is used **only** to:
 We do **not** use analytics, advertising, or any third-party trackers.
 
 ## 3. Data Sharing
-Volition Free sends negotiation content to `https://volition-ai-backend-9691w9.v2.appdeploy.ai/api/negotiate` for AI processing. My OpenAI API key mode sends requests directly to OpenAI or your configured endpoint. Automatic domain classification is available only in BYO mode. The extension does not use analytics or advertising trackers.
+Volition Free sends negotiation content to `https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate` for AI processing. My OpenAI API key mode sends requests directly to OpenAI or your configured endpoint. Automatic domain classification is available only in BYO mode. The extension does not use analytics or advertising trackers.
 
 ## 4. Data Retention & Deletion
 Uninstalling the extension or clearing Chrome’s extension data deletes locally stored settings and proof history. This does not delete content already sent to a provider. Remote processing and retention depend on the selected service; the extension cannot enforce remote deletion.

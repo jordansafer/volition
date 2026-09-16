@@ -42,7 +42,7 @@ const messages = [
 test('Free sends unchanged messages and image proof, never the saved key or BYO settings', async () => {
   const s = setup({ aiProvider: 'free', openaiApiKey: 'secret-test-key', customEndpoint: 'https://custom.example', openaiTextModel: 'custom-model' });
   const result = await s.context.chatWithGPT(messages);
-  assert.equal(s.requests[0].url, 'https://volition-ai-backend-9691w9.v2.appdeploy.ai/api/negotiate');
+  assert.equal(s.requests[0].url, 'https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate');
   assert.deepEqual(JSON.parse(s.requests[0].body), { messages });
   assert.equal(s.requests[0].headers.Authorization, undefined);
   assert.ok(!JSON.stringify(s.requests).includes('secret-test-key'));
