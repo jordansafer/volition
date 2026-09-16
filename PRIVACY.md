@@ -1,18 +1,18 @@
 # Volition – Privacy Policy
 
-_Last updated: 2024-07-19_
+_Last updated: 2026-09-16_
 
-Volition ("the Extension") runs entirely in your browser. We take privacy seriously and follow the Chrome Web Store **User Data Policy**.
+Volition ("the Extension") stores settings in your browser and sends negotiation requests to the provider you select.
 
 ## 1. Information We Collect
-The Extension **does not** collect, log, or transmit any personal information such as name, email address, browsing history, or cookies.
+Negotiation requests include the blocked URL, conversation, prompts, and any image proofs and proof-history context included in the conversation.
 
 The only data handled are:
 
 | Data | Where stored | Purpose | Shared with |
 |------|--------------|---------|-------------|
-| Your OpenAI API key (optional) | `chrome.storage.local` (encrypted at rest by Chrome) | Authenticates your prompts with OpenAI | **Never** |
-| Prompts & replies exchanged with ChatGPT | In-memory during each chat | Provide the negotiation feature | Sent **directly** to `api.openai.com` via HTTPS using your own key |
+| Your OpenAI API key (optional) | `chrome.storage.local` | Authenticates BYO requests | Sent only to OpenAI or your configured endpoint in BYO mode; never to Volition Free |
+| Conversations, image proofs, and proof-history context | Conversation in memory; proof history in local storage | Provide negotiation | Volition Free hosted backend, or OpenAI / your custom endpoint in BYO mode |
 | Block-list / allow-list / settings | `chrome.storage.local` | Configure the extension | **Never** |
 
 ## 2. How We Use Information
@@ -23,12 +23,10 @@ Data is used **only** to:
 We do **not** use analytics, advertising, or any third-party trackers.
 
 ## 3. Data Sharing
-We share **nothing** with anyone.
-When you send a prompt, the content is transmitted straight to OpenAI servers under your account; it never touches our servers.
+Volition Free sends negotiation content to `https://volition-ai-backend-9691w9.v2.appdeploy.ai/api/negotiate` for AI processing. My OpenAI API key mode sends requests directly to OpenAI or your configured endpoint. Automatic domain classification is available only in BYO mode. The extension does not use analytics or advertising trackers.
 
 ## 4. Data Retention & Deletion
-All data lives locally in your browser profile.
-Uninstalling the extension or clearing Chrome’s extension data permanently deletes it.
+Uninstalling the extension or clearing Chrome’s extension data deletes locally stored settings and proof history. This does not delete content already sent to a provider. Remote processing and retention depend on the selected service; the extension cannot enforce remote deletion.
 
 ## 5. Security
 Chrome’s extension storage is sandboxed per user profile. All network requests use TLS 1.2+. No remote code is executed.
@@ -38,4 +36,4 @@ The Extension is not directed to children under 13 and does not knowingly collec
 
 ---
 
-© 2024 Volition. All rights reserved. 
+© 2024 Volition. All rights reserved.

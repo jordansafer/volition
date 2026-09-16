@@ -9,10 +9,25 @@ const DEFAULT_BLOCKLIST = [
   "foxnews.com",
   "nytimes.com"
 ];
+const DEFAULT_REALLY_BAD_SITES = ["facebook.com", "reddit.com", "youtube.com"];
+const FREE_NEGOTIATION_URL = "https://volition-ai-backend-9691w9.v2.appdeploy.ai/api/negotiate";
+
+async function getAIProvider() {
+  const { aiProvider } = await chrome.storage.local.get(["aiProvider"]);
+  if (typeof aiProvider === "undefined") {
+    await chrome.storage.local.set({ aiProvider: "free" });
+    return "free";
+  }
+  return aiProvider;
+}
 
 // Initialize default settings on install
 chrome.runtime.onInstalled.addListener(async () => {
+  await getAIProvider();
   const data = await chrome.storage.local.get();
+  if (typeof data.reallyBadSites === "undefined") {
+    await chrome.storage.local.set({ reallyBadSites: DEFAULT_REALLY_BAD_SITES });
+  }
   if (!data.blocklist) {
     await chrome.storage.local.set({ blocklist: DEFAULT_BLOCKLIST });
   }
@@ -70,6 +85,8 @@ async function blockTab(tabId, originalUrl) {
 }
 
 async function classifyDomain(domain) {
+  // Automatic classification is a BYO feature; never use a saved key in Free mode.
+  if (await getAIProvider() !== "openai") return false;
   const { openaiApiKey, classificationPrompt, customEndpoint, openaiTextModel } = await chrome.storage.local.get([
     "openaiApiKey",
     "classificationPrompt",
@@ -140,29 +157,25 @@ Additional rules:
   }
 }
 
-// Global pause: when active, every site is allowed until the timestamp passes.
-async function getPauseUntil() {
-  const { pauseUntil } = await chrome.storage.local.get(["pauseUntil"]);
-  if (typeof pauseUntil !== "number") return null;
-  if (Date.now() >= pauseUntil) {
-    await chrome.storage.local.remove("pauseUntil");
-    return null;
-  }
-  return pauseUntil;
-}
-
 async function handleUrl(tabId, url) {
   const domain = getDomain(url);
   if (!domain) return;
 
-  // While paused, allow everything without consulting the lists or the LLM.
-  if (await getPauseUntil()) return;
-
-  const { blocklist = [], allowlist = [], advancedMode = false } = await chrome.storage.local.get([
+  const { blocklist = [], allowlist = [], advancedMode = false,
+    reallyBadSites = DEFAULT_REALLY_BAD_SITES, pauseUntil, pauseMode
+  } = await chrome.storage.local.get([
     "blocklist",
     "allowlist",
-    "advancedMode"
+    "advancedMode", "reallyBadSites", "pauseUntil", "pauseMode"
   ]);
+
+  if (typeof pauseUntil === "number" && pauseUntil > Date.now()) {
+    // Legacy pauses without a mode retain their original complete-pause behavior.
+    if (pauseMode === "partial" && findBestMatch(domain, reallyBadSites)) {
+      await blockTab(tabId, url);
+    }
+    return;
+  }
 
   const normalizedAllow = allowlist.map((d) =>
     typeof d === "string" ? { domain: d, expiresAt: null } : d
@@ -170,7 +183,7 @@ async function handleUrl(tabId, url) {
 
   // Find the best matches from both lists
   let allowMatch = findBestMatch(domain, normalizedAllow);
-  let blockMatch = findBestMatch(domain, blocklist.map(d => typeof d === "string" ? d : d.domain));
+  let blockMatch = findBestMatch(domain, [...blocklist, ...reallyBadSites].map(d => typeof d === "string" ? d : d.domain));
 
   // Check for expired allowlist entries
   if (allowMatch && allowMatch.expiresAt && Date.now() > allowMatch.expiresAt) {
@@ -210,7 +223,7 @@ async function handleUrl(tabId, url) {
   }
 
   // No explicit rules, use advanced mode if enabled
-  if (advancedMode) {
+  if (advancedMode && await getAIProvider() === "openai") {
     const shouldBlock = await classifyDomain(domain);
     if (shouldBlock) {
       await chrome.storage.local.set({ blocklist: [...blocklist, domain] });
@@ -275,6 +288,32 @@ async function trackApiUsage(model, type, tokens) {
 }
 
 async function chatWithGPT(messages) {
+  const provider = await getAIProvider();
+  if (provider === "free") {
+    const res = await fetch(FREE_NEGOTIATION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages })
+    });
+    if (!res.ok) {
+      throw new Error(`Volition Free is unavailable (HTTP ${res.status}). Please try again later or choose My OpenAI API key in Settings.`);
+    }
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Volition Free returned an invalid response. Please try again later.");
+    }
+    if (data.error) throw new Error(`Volition Free: ${data.error.message || data.error}`);
+    const rawReply = data.reply ?? data.choices?.[0]?.message;
+    const reply = typeof rawReply === "string" ? { role: "assistant", content: rawReply } : rawReply;
+    if (!reply || typeof reply.content !== "string" || !reply.content.trim()) {
+      throw new Error("Volition Free returned no reply. Please try again later.");
+    }
+    await trackApiUsage("Volition Free", "chat", data.usage?.total_tokens || 0);
+    return { reply: { ...reply, role: "assistant" }, model: "Volition Free" };
+  }
+  if (provider !== "openai") throw new Error("Choose a valid AI mode in Settings.");
   const {
     openaiApiKey,
     openaiTextModel,
@@ -295,7 +334,7 @@ async function chatWithGPT(messages) {
   const maxTokens = parseInt(tokenLimit) || 300;
   
   if (!openaiApiKey) {
-    throw new Error("No API key set in options.");
+    throw new Error("My OpenAI API key mode is selected, but no API key is saved. Add your key in Settings or select Volition Free.");
   }
 
   let modelToUse = textModel;

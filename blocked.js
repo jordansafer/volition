@@ -68,10 +68,12 @@ chrome.storage.local.get(["negotiationPrompt", "classificationPrompt"], (res) =>
   }
 });
 
-chrome.storage.local.get(["openaiApiKey"], (d) => {
-  if (!d.openaiApiKey) {
-    modelInfo.textContent = "⚠️ API key not set – open Settings to add it.";
+chrome.storage.local.get(["openaiApiKey", "aiProvider"], (d) => {
+  if (d.aiProvider === "openai" && !d.openaiApiKey) {
+    modelInfo.textContent = "⚠️ My OpenAI API key mode requires a key. Add one in Settings or select Volition Free.";
     modelInfo.style.color = "#cc0000";
+  } else if (!d.aiProvider || d.aiProvider === "free") {
+    modelInfo.textContent = "Volition Free";
   }
 });
 
@@ -307,4 +309,4 @@ chrome.storage.onChanged.addListener((changes, area) => {
       userInput.style.fontSize = size + "px";
     }
   }
-}); 
+});

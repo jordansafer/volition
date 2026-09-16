@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", init);
+const DEFAULT_REALLY_BAD_SITES = ["facebook.com", "reddit.com", "youtube.com"];
 
 function $(id) {
   return document.getElementById(id);
@@ -7,7 +8,9 @@ function $(id) {
 async function init() {
   const data = await chrome.storage.local.get([
     "openaiApiKey",
+    "aiProvider",
     "blocklist",
+    "reallyBadSites",
     "allowlist",
     "advancedMode",
     "negotiationPrompt",
@@ -25,10 +28,14 @@ async function init() {
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
-  if (!data.openaiApiKey) {
-    $("key-status").textContent = "⚠️ No API key saved – chat will not work.";
-    $("key-status").style.color = "#cc0000";
-  }
+  const provider = data.aiProvider ?? "free";
+  if (typeof data.aiProvider === "undefined") await chrome.storage.local.set({ aiProvider: provider });
+  $("ai-provider").value = provider;
+  $("ai-provider").addEventListener("change", async () => {
+    await chrome.storage.local.set({ aiProvider: $("ai-provider").value });
+    await refreshProviderUI();
+  });
+  await refreshProviderUI();
   $("advanced-mode").checked = data.advancedMode || false;
 
   // Handle text model selection
@@ -64,10 +71,16 @@ async function init() {
   $("chat-font-size-label").textContent = fontSize + "px";
 
   renderList("blocklist", data.blocklist || [], "block");
+  if (typeof data.reallyBadSites === "undefined") {
+    data.reallyBadSites = DEFAULT_REALLY_BAD_SITES;
+    await chrome.storage.local.set({ reallyBadSites: data.reallyBadSites });
+  }
+  renderList("reallyBadSites", data.reallyBadSites, "bad");
   renderList("allowlist", data.allowlist || [], "allow");
 
   $("save-key").addEventListener("click", saveKey);
   $("add-block").addEventListener("click", () => addDomain("block"));
+  $("add-bad").addEventListener("click", addReallyBadDomain);
   $("add-allow").addEventListener("click", () => addDomain("allow"));
   $("advanced-mode").addEventListener("change", saveAdvancedMode);
   $("text-model-select").addEventListener("change", handleTextModelChange);
@@ -79,7 +92,8 @@ async function init() {
   $("chat-font-size").addEventListener("input", saveChatFontSize);
   // Pause blocking
   $("pause-hours").value = data.pauseHours || 1;
-  $("pause-btn").addEventListener("click", startPause);
+  $("partial-pause-btn").addEventListener("click", () => startPause("partial"));
+  $("complete-pause-btn").addEventListener("click", () => startPause("complete"));
   $("resume-btn").addEventListener("click", endPause);
   refreshPauseUI();
   setInterval(refreshPauseUI, 30000);
@@ -145,9 +159,20 @@ function formatExpiry(ts) {
 async function saveKey() {
   const key = $("api-key").value.trim();
   await chrome.storage.local.set({ openaiApiKey: key });
+  await refreshProviderUI();
   $("key-status").textContent = "Saved!";
   $("key-status").style.color = "#28a745";
   setTimeout(() => ($("key-status").textContent = ""), 1500);
+}
+
+async function refreshProviderUI() {
+  const { aiProvider = "free", openaiApiKey } = await chrome.storage.local.get(["aiProvider", "openaiApiKey"]);
+  const byo = aiProvider === "openai";
+  $("provider-status").textContent = byo
+    ? (openaiApiKey ? "Using your OpenAI API key and BYO settings." : "My OpenAI API key mode requires a saved API key. Add one below or select Volition Free.")
+    : "Volition Free is selected. No API key required; your saved key will not be used.";
+  $("provider-status").style.color = byo && !openaiApiKey ? "#cc0000" : "#333";
+  $("test-key").disabled = !byo;
 }
 
 async function saveTextModel() {
@@ -275,11 +300,31 @@ async function addDomain(type) {
 }
 
 async function removeDomain(type, domain) {
-  const listKey = type === "block" ? "blocklist" : "allowlist";
+  const listKey = type === "bad" ? "reallyBadSites" : type === "block" ? "blocklist" : "allowlist";
   const data = await chrome.storage.local.get([listKey]);
   const list = (data[listKey] || []).filter((d) => (typeof d === "string" ? d : d.domain) !== domain);
   await chrome.storage.local.set({ [listKey]: list });
   renderList(listKey, list, type);
+}
+
+async function addReallyBadDomain() {
+  const input = $("new-bad-domain");
+  const value = input.value.trim().toLowerCase();
+  if (!value) return;
+  let domain;
+  try {
+    const url = new URL(value.includes("://") ? value : `https://${value}`);
+    if (!["http:", "https:"].includes(url.protocol) || !url.hostname.includes(".")) throw new Error();
+    domain = url.hostname.replace(/\.$/, "");
+  } catch {
+    alert("Enter a valid domain, such as example.com.");
+    return;
+  }
+  const { reallyBadSites = DEFAULT_REALLY_BAD_SITES } = await chrome.storage.local.get(["reallyBadSites"]);
+  const updated = [...new Set([...reallyBadSites, domain])].sort();
+  await chrome.storage.local.set({ reallyBadSites: updated });
+  renderList("reallyBadSites", updated, "bad");
+  input.value = "";
 }
 
 async function saveAdvancedMode() {
@@ -295,6 +340,8 @@ async function savePrompts() {
 }
 
 async function testKey() {
+  const { aiProvider = "free" } = await chrome.storage.local.get(["aiProvider"]);
+  if (aiProvider !== "openai") return;
   const key = $("api-key").value.trim();
   if (!key) {
     $("key-status").textContent = "Please enter a key first.";
@@ -334,7 +381,7 @@ async function testKey() {
     $("key-status").textContent = "Error: " + err.message;
     $("key-status").style.color = "#cc0000";
   } finally {
-    $("test-key").disabled = false;
+    await refreshProviderUI();
   }
 } 
 
@@ -345,23 +392,25 @@ async function saveChatFontSize() {
 }
 
 async function refreshPauseUI() {
-  const { pauseUntil } = await chrome.storage.local.get(["pauseUntil"]);
+  const { pauseUntil, pauseMode } = await chrome.storage.local.get(["pauseUntil", "pauseMode"]);
   const active = typeof pauseUntil === "number" && pauseUntil > Date.now();
 
   if (active) {
-    $("pause-status").textContent = `⏸ Blocking paused – resumes ${formatExpiry(pauseUntil)}.`;
+    const partial = pauseMode === "partial";
+    $("pause-status").textContent = `⏸ ${partial ? "Partial pause – really bad sites remain blocked" : "Complete pause – all sites allowed"}. Normal blocking resumes ${formatExpiry(pauseUntil)}.`;
     $("pause-status").style.color = "#b26a00";
-    $("pause-btn").textContent = "Extend pause";
+    $("partial-pause-btn").textContent = partial ? "Extend partial pause" : "Switch to partial pause";
+    $("complete-pause-btn").textContent = partial ? "Switch to complete pause" : "Extend complete pause";
     $("resume-btn").style.display = "inline-block";
   } else {
-    if (pauseUntil) await chrome.storage.local.remove("pauseUntil");
     $("pause-status").textContent = "";
-    $("pause-btn").textContent = "Pause";
+    $("partial-pause-btn").textContent = "Partial pause";
+    $("complete-pause-btn").textContent = "Complete pause";
     $("resume-btn").style.display = "none";
   }
 }
 
-async function startPause() {
+async function startPause(pauseMode) {
   const hours = parseFloat($("pause-hours").value);
   if (!Number.isFinite(hours) || hours <= 0) {
     $("pause-status").textContent = "Enter a number of hours greater than 0.";
@@ -370,12 +419,13 @@ async function startPause() {
   }
   await chrome.storage.local.set({
     pauseUntil: Date.now() + hours * 60 * 60 * 1000,
+    pauseMode,
     pauseHours: hours
   });
   refreshPauseUI();
 }
 
 async function endPause() {
-  await chrome.storage.local.remove("pauseUntil");
+  await chrome.storage.local.remove(["pauseUntil", "pauseMode"]);
   refreshPauseUI();
 }

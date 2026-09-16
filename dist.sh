@@ -9,11 +9,17 @@ cd "$ROOT_DIR"
 rm -rf dist volition-dist.zip
 mkdir dist
 
-# Copy everything except dev/builder files and heavy/unused assets
+# Copy the extension source while excluding repository metadata, development files,
+# and heavy/unused assets. Chrome receives only this ZIP, so keep credentials and
+# CI configuration out of it as well.
 rsync -a ./ dist/ \
   --exclude ".git" \
+  --exclude ".github" \
+  --exclude ".agents" \
+  --exclude ".codex" \
   --exclude "dist" \
   --exclude "node_modules" \
+  --exclude "tests/" \
   --exclude "*.zip" \
   --exclude "*.DS_Store" \
   --exclude "docs/" \
@@ -29,4 +35,4 @@ rsync -a ./ dist/ \
 cd dist
 zip -r ../volition-dist.zip . -x "*.DS_Store"
 
-echo "Created volition-dist.zip in project root." 
+echo "Created volition-dist.zip in project root."
