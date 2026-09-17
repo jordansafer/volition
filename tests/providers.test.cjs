@@ -26,8 +26,8 @@ function setup(initial = {}, file = 'background.js') {
         async set(data) { Object.assign(state, structuredClone(data)); },
         async remove(keys) { for (const key of [].concat(keys)) delete state[key]; }
       } },
-      runtime: { onInstalled: { addListener(fn) { s.install = fn; } }, onMessage: { addListener() {} } },
-      tabs: { onUpdated: { addListener() {} } },
+      runtime: { onInstalled: { addListener(fn) { s.install = fn; } }, onMessage: { addListener() {} }, getURL: value => value },
+      tabs: { onUpdated: { addListener() {} }, update() {} },
       action: { onClicked: { addListener() {} } }
     }
   });
@@ -48,18 +48,18 @@ test('Free sends unchanged messages and image proof, never the saved key or BYO 
   assert.ok(!JSON.stringify(s.requests).includes('secret-test-key'));
   assert.equal(result.reply.content, 'APPROVED for 5 minutes');
   assert.equal(s.state.openaiApiKey, 'secret-test-key');
-  assert.equal(await s.context.classifyDomain('example.com'), false);
   assert.equal(s.requests.length, 1);
 });
-test('new and existing users default to persisted Free, regardless of a saved key', async () => {
+test('new users default to Free; legacy key users retain BYO; explicit modes persist', async () => {
   for (const initial of [{}, { openaiApiKey: 'retained-key' }]) {
     const s = setup(initial);
     await s.install();
-    assert.equal(s.state.aiProvider, 'free');
+    assert.equal(s.state.aiProvider, initial.openaiApiKey ? 'openai' : 'free');
     assert.equal(s.state.openaiApiKey, initial.openaiApiKey);
-    await s.context.chatWithGPT(messages);
-    assert.equal(s.requests[0].headers.Authorization, undefined);
   }
+  const explicit = setup({ aiProvider: 'free', openaiApiKey: 'retained-key' });
+  await explicit.install();
+  assert.equal(explicit.state.aiProvider, 'free');
 });
 test('BYO preserves custom endpoint, text/vision models, token limits, and authorization', async () => {
   const s = setup({ aiProvider: 'openai', openaiApiKey: 'test-key', customEndpoint: 'https://custom.example/chat', openaiTextModel: 'my-text', openaiVisionModel: 'gpt-5', tokenLimit: '900' });
@@ -97,8 +97,8 @@ test('Free accepts compatible replies and reports HTTP, backend, and malformed r
 test('settings switch freely while retaining key and show missing-key error only in BYO', async () => {
   const s = setup({ openaiApiKey: 'retained-key' }, 'options.js');
   await s.context.init();
-  assert.equal(s.state.aiProvider, 'free');
-  assert.equal(s.elements['test-key'].disabled, true);
+  assert.equal(s.state.aiProvider, 'openai');
+  assert.equal(s.elements['test-key'].disabled, false);
   for (const mode of ['openai', 'free', 'openai']) {
     s.elements['ai-provider'].value = mode;
     await s.elements['ai-provider'].handlers.change();
@@ -113,4 +113,29 @@ test('settings switch freely while retaining key and show missing-key error only
   assert.match(s.elements['provider-status'].textContent, /No API key required/);
   await s.context.testKey();
   assert.equal(s.requests.length, 0);
+});
+
+test('Free classifies unknown sites, respects custom prompts, and never transmits a stored key', async () => {
+  for (const decision of ['BLOCK', 'ALLOW']) {
+    const s = setup({ aiProvider: 'free', openaiApiKey: 'secret-test-key', advancedMode: true, classificationPrompt: 'Custom classification directive' });
+    s.response = { reply: { role: 'assistant', content: decision } };
+    await s.context.handleUrl(1, 'https://example.com');
+    assert.equal(s.requests.length, 1);
+    assert.ok(!JSON.stringify(s.requests).includes('secret-test-key'));
+    assert.match(JSON.parse(s.requests[0].body).messages[0].content, /Custom classification directive/);
+    if (decision === 'BLOCK') assert.deepEqual(s.state.blocklist, ['example.com']);
+    else assert.equal(s.state.allowlist[0].domain, 'example.com');
+    assert.equal(s.state.apiUsageStats['Volition Free'].classificationCalls, 1);
+  }
+});
+
+test('failed Free classification does not permanently allow an unknown site', async () => {
+  for (const status of [0, 503]) {
+    const s = setup({ aiProvider: 'free', advancedMode: true });
+    s.status = status;
+    s.response = { reply: 'Unexpected prose' };
+    await s.context.handleUrl(1, 'https://example.com');
+    assert.equal(s.state.allowlist, undefined);
+    assert.equal(s.state.blocklist, undefined);
+  }
 });

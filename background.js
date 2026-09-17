@@ -13,10 +13,11 @@ const DEFAULT_REALLY_BAD_SITES = ["facebook.com", "reddit.com", "youtube.com"];
 const FREE_NEGOTIATION_URL = "https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate";
 
 async function getAIProvider() {
-  const { aiProvider } = await chrome.storage.local.get(["aiProvider"]);
+  const { aiProvider, openaiApiKey } = await chrome.storage.local.get(["aiProvider", "openaiApiKey"]);
   if (typeof aiProvider === "undefined") {
-    await chrome.storage.local.set({ aiProvider: "free" });
-    return "free";
+    const provider = openaiApiKey ? "openai" : "free";
+    await chrome.storage.local.set({ aiProvider: provider });
+    return provider;
   }
   return aiProvider;
 }
@@ -85,15 +86,14 @@ async function blockTab(tabId, originalUrl) {
 }
 
 async function classifyDomain(domain) {
-  // Automatic classification is a BYO feature; never use a saved key in Free mode.
-  if (await getAIProvider() !== "openai") return false;
+  const provider = await getAIProvider();
   const { openaiApiKey, classificationPrompt, customEndpoint, openaiTextModel } = await chrome.storage.local.get([
     "openaiApiKey",
     "classificationPrompt",
     "customEndpoint",
     "openaiTextModel"
   ]);
-  if (!openaiApiKey) return false; // default allow when no key set
+  if (provider === "openai" && !openaiApiKey) return false;
 
   const apiEndpoint = customEndpoint || "https://api.openai.com/v1/chat/completions";
   const model = openaiTextModel || "gpt-3.5-turbo";
@@ -116,6 +116,23 @@ Additional rules:
     ? `${defaultPrompt}\n\nUser override directives:\n${classificationPrompt}`
     : defaultPrompt;
   const userPrompt = `Should access to \"${domain}\" be blocked? Respond with BLOCK or ALLOW.`;
+
+  if (provider === "free") {
+    try {
+      const result = await chatWithGPT([
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ], "classification");
+      const answer = result.reply.content.trim().toUpperCase();
+      if (answer === "BLOCK") return true;
+      if (answer === "ALLOW") return false;
+      console.error("Invalid Free classification reply", answer);
+      return null;
+    } catch (error) {
+      console.error("Free classification failed", error);
+      return null;
+    }
+  }
 
   try {
     // Use max_completion_tokens for newer models that require it
@@ -223,8 +240,10 @@ async function handleUrl(tabId, url) {
   }
 
   // No explicit rules, use advanced mode if enabled
-  if (advancedMode && await getAIProvider() === "openai") {
+  if (advancedMode) {
     const shouldBlock = await classifyDomain(domain);
+    // A failed classification must not create a permanent allowlist entry.
+    if (shouldBlock === null) return;
     if (shouldBlock) {
       await chrome.storage.local.set({ blocklist: [...blocklist, domain] });
       await blockTab(tabId, url);
@@ -287,7 +306,7 @@ async function trackApiUsage(model, type, tokens) {
   });
 }
 
-async function chatWithGPT(messages) {
+async function chatWithGPT(messages, usageType = "chat") {
   const provider = await getAIProvider();
   if (provider === "free") {
     const res = await fetch(FREE_NEGOTIATION_URL, {
@@ -310,7 +329,7 @@ async function chatWithGPT(messages) {
     if (!reply || typeof reply.content !== "string" || !reply.content.trim()) {
       throw new Error("Volition Free returned no reply. Please try again later.");
     }
-    await trackApiUsage("Volition Free", "chat", data.usage?.total_tokens || 0);
+    await trackApiUsage("Volition Free", usageType, data.usage?.total_tokens || 0);
     return { reply: { ...reply, role: "assistant" }, model: "Volition Free" };
   }
   if (provider !== "openai") throw new Error("Choose a valid AI mode in Settings.");

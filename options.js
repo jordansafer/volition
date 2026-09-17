@@ -28,7 +28,7 @@ async function init() {
   ]);
 
   $("api-key").value = data.openaiApiKey || "";
-  const provider = data.aiProvider ?? "free";
+  const provider = data.aiProvider ?? (data.openaiApiKey ? "openai" : "free");
   if (typeof data.aiProvider === "undefined") await chrome.storage.local.set({ aiProvider: provider });
   $("ai-provider").value = provider;
   $("ai-provider").addEventListener("change", async () => {
@@ -170,7 +170,7 @@ async function refreshProviderUI() {
   const byo = aiProvider === "openai";
   $("provider-status").textContent = byo
     ? (openaiApiKey ? "Using your OpenAI API key and BYO settings." : "My OpenAI API key mode requires a saved API key. Add one below or select Volition Free.")
-    : "Volition Free is selected. No API key required; your saved key will not be used.";
+    : "Volition Free is selected. No API key required; your saved key will not be used." + (openaiApiKey ? " To keep using your own key, select My OpenAI API key above." : "");
   $("provider-status").style.color = byo && !openaiApiKey ? "#cc0000" : "#333";
   $("test-key").disabled = !byo;
 }

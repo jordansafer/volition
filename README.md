@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
 | Timed overrides | ChatGPT can grant 10 s, 5 min, 2 h, or unlimited access. A badge shows time remaining; the page re-blocks automatically. |
 | Timed pause | Choose a partial pause (allow everything except really bad sites) or complete pause (allow everything) for N hours. Normal blocking resumes when the timer expires. |
 | Really bad sites | Editable in Settings; defaults to Facebook, Reddit, and YouTube, including subdomains. These stay blocked during partial pauses even if allowlisted; outside a pause, normal blocklist/allowlist rules apply. |
-| Advanced auto-review | In BYO mode, unknown domains are sent to ChatGPT for quick **BLOCK / ALLOW** classification. |
+| Advanced auto-review | When enabled, unknown domains are classified as **BLOCK / ALLOW** using your selected Free or BYO provider. |
 | Proof with images | Upload a (down-sampled) screenshot/photo to prove you completed a task; ChatGPT reviews it (vision model required). |
 | Model selector | gpt-3.5-turbo, gpt-4o-mini, gpt-4o, or gpt-o3. |
 | Fully local data | API key and settings stay in `chrome.storage.local`; no trackers, no analytics. |
@@ -40,7 +40,7 @@ https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
    2. Enable **Developer mode**.
    3. Click **Load unpacked** → select the project folder.
 3. Click the toolbar icon → **Options**.
-4. Keep **Volition Free** selected to negotiate without a key. Alternatively select **My OpenAI API key**, save your key, and configure your models or custom endpoint. Existing installations also default to Free until a mode is explicitly selected; saved keys are retained.
+4. New users without a key start with **Volition Free**. Alternatively select **My OpenAI API key**, save your key, and configure your models or custom endpoint. Upgrades with a saved key and no stored mode retain BYO behavior. Existing stored modes and keys are preserved; switch modes explicitly in Settings.
 5. Start browsing—blocked sites will redirect to the negotiation screen.
 
 ---
