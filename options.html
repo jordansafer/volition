@@ -21,7 +21,7 @@
       <option value="openai">My OpenAI API key</option>
     </select>
     <p id="provider-status" role="status"></p>
-    <small class="hint">Volition Free sends your conversation and image proofs to Volition's hosted backend. Your saved OpenAI key is only used in My OpenAI API key mode.</small>
+    <small class="hint">Volition Free sends the blocked URL, conversation, image proofs, and recent approval summaries to Volition's hosted backend for AI processing. Your saved key is only used in BYO mode. <a href="PRIVACY.md" target="_blank">Privacy policy</a></small>
     <h3>OpenAI API Key — BYO mode only</h3>
     <small class="hint">The key, text model, vision model, custom endpoint, and token limit apply only to My OpenAI API key mode. Switching modes keeps your saved key.</small>
     <div class="input-row">
@@ -29,7 +29,7 @@
       <button id="save-key">Save</button>
       <button id="test-key">Test</button>
     </div>
-    <small class="hint">Need a key? <a href="https://platform.openai.com/account/api-keys" target="_blank">Generate one here</a>.</small>
+    <small class="hint">BYO only: <a href="https://platform.openai.com/account/api-keys" target="_blank">Get an OpenAI key</a>. Test sends a short request directly to OpenAI, even if you configured a custom endpoint.</small>
     <span id="key-status"></span>
     <div style="margin-top:10px;">
       <label for="text-model-select"><strong>Text-only model:</strong></label>
@@ -100,7 +100,7 @@
   <section class="card">
     <h2>Custom Prompts (optional)</h2>
     <label for="neg-prompt"><strong>Negotiation prompt</strong></label>
-    <textarea id="neg-prompt" rows="4" placeholder="System prompt that governs ChatGPT's dialogue with you..."></textarea>
+    <textarea id="neg-prompt" rows="4" placeholder="Instructions for the AI's dialogue with you..."></textarea>
     <label for="class-prompt" style="margin-top:8px;"><strong>Classification prompt</strong></label>
     <textarea id="class-prompt" rows="4" placeholder="System prompt that decides BLOCK vs ALLOW for unknown domains..."></textarea>
     <button id="save-prompts" style="margin-top:10px;">Save Prompts</button>

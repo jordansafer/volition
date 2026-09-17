@@ -17,9 +17,12 @@ rsync -a ./ dist/ \
   --exclude ".github" \
   --exclude ".agents" \
   --exclude ".codex" \
+  --exclude ".env" \
+  --exclude ".env.*" \
   --exclude "dist" \
   --exclude "node_modules" \
   --exclude "tests/" \
+  --exclude "backend/" \
   --exclude "*.zip" \
   --exclude "*.DS_Store" \
   --exclude "docs/" \
