@@ -2,7 +2,7 @@
   "name": "volition",
   "version": "1.1.4",
   "private": true,
-  "description": "An AI website blocker that makes you negotiate for access to distracting sites.",
+  "description": "AI website blocker that makes you explain why you need access. It can grant temporary access when needed.",
   "scripts": {
     "build": "bash dist.sh",
     "test": "node --test tests/*.test.cjs"

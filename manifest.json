@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Volition",
-  "description": "An AI website blocker that makes you negotiate for access to distracting sites.",
+  "name": "Volition — AI Website Blocker & Focus Tool",
+  "short_name": "Volition",
+  "description": "AI website blocker that makes you explain why you need access. It can grant temporary access when needed.",
   "version": "1.1.4",
   "permissions": ["storage", "tabs", "scripting"],
   "host_permissions": ["<all_urls>", "https://api.openai.com/*", "https://volition-free-api-jordansafers-projects.vercel.app/*"],

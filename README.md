@@ -1,8 +1,8 @@
-# Volition
+# Volition — AI Website Blocker & Focus Tool
 
-A Chrome extension that blocks distracting websites and lets you negotiate with AI for timed access. New users can use Volition Free without configuring an API key.
+Volition is an AI website blocker that helps you focus by blocking distracting sites. When you need a blocked site, explain why; AI can approve temporary access. Volition checks its expiry as you browse and shows a countdown on temporarily allowed pages.
 
-Install the [Chrome Extension](https://chromewebstore.google.com/detail/volition/iempmfmcjgjdpmobhlaookjjjmbfiaeh)
+Install [Volition from the Chrome Web Store](https://chromewebstore.google.com/detail/volition/iempmfmcjgjdpmobhlaookjjjmbfiaeh).
 
 ![Screenshot of blocked page](./docs/screenshot-blocked.png)
 
@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
 | Feature | Description |
 |---------|-------------|
 | Default block-list | Ships with major social, news, and video sites pre-blocked. |
-| AI negotiation | Use Volition Free (no API key required), or explicitly choose My OpenAI API key in Settings. Switch modes without deleting your saved key. |
+| AI negotiation | Explain why you need a blocked site. AI can ask follow-up questions or approve timed access. |
 | Timed overrides | AI can grant temporary or unlimited access. An injected countdown shows remaining temporary access and triggers a recheck at expiry. |
 | Timed pause | Choose a partial pause (allow everything except really bad sites) or complete pause (allow everything) for N hours. Normal blocking resumes when the timer expires. |
 | Really bad sites | Editable in Settings; defaults to Facebook, Reddit, and YouTube, including subdomains. These stay blocked during partial pauses even if allowlisted; outside a pause, normal blocklist/allowlist rules apply. |
@@ -54,6 +54,8 @@ npm run build   # or just:  bash dist.sh
 ```
 This script creates a **dist/** directory without the Git repo and makes `volition-dist.zip`, ready for upload.
 The build uses Bash, rsync, and zip. Check the archive before submission; do not place credential files in the source tree. `.env` files are excluded from packaging.
+
+The Store's detailed description and disclosure copy are maintained in [docs/chrome-web-store-listing.md](./docs/chrome-web-store-listing.md). Update the Developer Dashboard listing manually from that file **before pushing a release tag**: tag pushes automatically upload and submit the ZIP for review, but do not update Dashboard text or assets.
 
 ### Automated releases
 
