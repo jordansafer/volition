@@ -1,0 +1,60 @@
+{
+  "kind": "Continuous recording of actual extension usage",
+  "extensionId": "bhhglpfljpoocbckccgpfpehlcjjelef",
+  "start": "2026-10-13T15:20:21.528Z",
+  "events": [
+    {
+      "seconds": 0,
+      "action": "Verified real loaded extension",
+      "name": "Volition — AI Website Blocker & Focus Tool",
+      "version": "1.1.5"
+    },
+    {
+      "seconds": 3.09,
+      "action": "Add website using actual blocklist controls"
+    },
+    {
+      "seconds": 5.6,
+      "action": "Search actual blocklist"
+    },
+    {
+      "seconds": 9.38,
+      "action": "Navigate to real blocked website"
+    },
+    {
+      "seconds": 10.62,
+      "action": "Actual blocker redirected the visit"
+    },
+    {
+      "seconds": 22.7,
+      "action": "Sent genuine request through Volition hosted service"
+    },
+    {
+      "seconds": 25.57,
+      "action": "Real AI grant opened requested website",
+      "hostname": "news.ycombinator.com"
+    },
+    {
+      "seconds": 25.75,
+      "action": "Actual injected countdown visible",
+      "text": "29s"
+    },
+    {
+      "seconds": 55.88,
+      "action": "Temporary access expired and website was blocked again"
+    },
+    {
+      "seconds": 60.49,
+      "action": "Actual usage statistics",
+      "approvals": 1,
+      "calls": 1,
+      "dailyBuckets": 1
+    },
+    {
+      "seconds": 64.23,
+      "action": "Store screenshots captured from actual extension session"
+    }
+  ],
+  "complete": true,
+  "end": "2026-10-13T15:21:26.210Z"
+}

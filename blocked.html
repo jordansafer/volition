@@ -2,23 +2,30 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- verbatim keep text -->
   <title>Site Blocked</title>
   <link rel="icon" type="image/png" href="icons/icon32.png" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="presentation.css" />
 </head>
 <body>
   <div class="container">
+    <!-- verbatim keep text -->
     <h1>Access Temporarily Blocked</h1>
+    <!-- verbatim keep text -->
     <p class="sub">Explain why you need access and your selected AI service will review your request.</p>
-    <p class="sub">Sending shares this page's full URL, your conversation, uploaded images, and recent approval summaries with your selected service. Free mode uses Volition's hosted backend; BYO mode uses your configured provider. <a href="PRIVACY.md" target="_blank">Privacy policy</a></p>
     <p id="model-info" class="sub"></p>
     <p id="site-info"></p>
 
     <div id="chat-window" class="chat-window" dir="auto"></div>
 
+    <!-- verbatim keep text -->
     <textarea id="user-input" placeholder="Explain why you need access..." dir="auto"></textarea>
     <input type="file" id="image-upload" accept="image/*" hidden />
+    <!-- verbatim keep text -->
     <label for="image-upload" id="upload-label" class="file-btn">📷 Upload Image</label>
+    <!-- verbatim keep text -->
     <button id="send-btn">Send</button>
   </div>
 

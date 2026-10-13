@@ -16,12 +16,15 @@ rsync -a ./ dist/ \
   --exclude ".git" \
   --exclude ".github" \
   --exclude ".agents" \
+  --exclude "AGENTS.md" \
   --exclude ".codex" \
   --exclude ".env" \
   --exclude ".env.*" \
   --exclude "dist" \
   --exclude "node_modules" \
   --exclude "tests/" \
+  --exclude "scripts/" \
+  --exclude "צילום מסך*" \
   --exclude "backend/" \
   --exclude "*.zip" \
   --exclude "*.DS_Store" \

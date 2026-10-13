@@ -1,12 +1,12 @@
 # Volition – Privacy Policy
 
-_Last updated: 2026-09-17_
+_Last updated: 2026-09-28_
 
 Volition blocks distracting websites and uses AI to negotiate access. Settings and access records are stored in your browser. AI features send information to the service selected in Settings.
 
-## Free mode and data sharing
+## Hosted Volition connection and data sharing
 
-New installations without a saved API key default to Volition Free. Existing saved mode choices are preserved; upgrades with a saved key but no mode retain BYO mode.
+New installations without a saved API key default to the hosted connection labeled **Volition** in Settings (previously **Volition Free**). Existing saved connection choices are preserved; upgrades with a saved key but no connection choice retain **My API key**.
 
 Free requests are sent over HTTPS to:
 `https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate`
@@ -28,9 +28,9 @@ Network requests expose connection information such as the source IP address and
 
 ## Optional BYO API-key mode
 
-In **My OpenAI API key** mode, your key is stored in `chrome.storage.local` in your browser profile. Negotiation and classification requests go directly from the extension to `https://api.openai.com/v1/chat/completions`, or to the custom compatible endpoint you configure. They do not pass through the Volition Free backend.
+With **My API key** selected, your key is stored in `chrome.storage.local` in your browser profile. Negotiation and classification requests go directly from the extension to `https://api.openai.com/v1/chat/completions`, or to the custom compatible endpoint you configure. They do not pass through the Volition hosted backend.
 
-The selected endpoint receives the key in an Authorization header, the relevant messages described above, and model/token settings. The **Test** button sends your entered key and a short test prompt directly to OpenAI, even if a custom endpoint is configured. Testing is disabled in Free mode. Switching modes does not delete the key. The custom endpoint controls who receives it; use only a service you trust.
+The selected endpoint receives the key in an Authorization header, the relevant messages described above, and model/token settings. **Test connection** sends your entered key and a short test prompt to the endpoint currently entered in Settings, using the selected text model and token limit. If the endpoint is blank, it uses OpenAI. Testing is disabled when the hosted Volition connection is selected. Switching connections does not delete the key. The custom endpoint controls who receives it; use only a service you trust.
 
 ## Local extension data
 
@@ -39,6 +39,7 @@ The extension stores the following in `chrome.storage.local` (not Chrome sync st
 - Blocklist, allowlist, really-bad-sites list, and access expiry timestamps. Automatic classification may add domains to the lists.
 - Selected AI mode, optional API key, models, custom endpoint, token limit, custom prompts, classification toggle, chat font size, and pause mode/duration/expiry.
 - Up to 20 approval records: URL/domain, approval time and duration/expiry, model label, a short AI response excerpt, whether an image was supplied, and its timestamp when applicable. Raw proof images are not saved in this history.
+- Daily statistics for the latest 90 UTC dates: block counts, negotiation outcomes and message counts, granted durations in fixed buckets, pause time, and API call/token/response-time totals. No individual event log is added. Up to 100 temporary tab entries contain a tab ID, last blocked hostname, random conversation ID, message count, and last update time. Entries expire after 24 hours of inactivity and are pruned on the next statistics operation; closed tabs are removed. These records stay in your browser.
 - Usage totals by model/service and up to 100 recent API activity records containing timestamps, request type, model/service, and token counts. These statistics are local; there is no analytics upload in the extension code.
 
 The ongoing conversation and uploaded image data are held in the blocked page's memory and sent again with subsequent messages in that conversation. The extension does not save full transcripts or raw images to local storage. Approval excerpts and URLs do persist as described above. Diagnostic console messages can include AI replies, errors, domains, and endpoint/model information; browser developer tools may retain those messages during debugging.
@@ -49,7 +50,7 @@ The extension code contains no advertising, tracking SDK, remote analytics, acco
 
 ## Retention and deletion
 
-Settings and lists remain until changed or the extension's local data is cleared. The history limits above remove the oldest records when new ones are added. **Reset statistics** clears usage totals and API activity history, but does not clear approval history, settings, or keys. You can remove your key by saving an empty key field. Uninstalling the extension or clearing its local data removes locally stored records. Expired access rules are checked during browsing; expiry does not necessarily immediately erase every stored timestamp.
+Settings and lists remain until changed or the extension's local data is cleared. The history limits above remove the oldest records when new ones are added. **Reset statistics** clears daily aggregates, temporary statistics bookkeeping, usage totals and API activity history, but does not clear approval history, settings, or keys. You can remove your key by saving an empty key field. Uninstalling the extension or clearing its local data removes locally stored records. Expired access rules are checked during browsing; expiry does not necessarily immediately erase every stored timestamp.
 
 Deleting local data does not delete previously transmitted requests or remote logs. Remote storage, retention, training use, and deletion controls depend on the Volition backend, Vercel, OpenAI, or your chosen provider; the extension cannot enforce remote deletion. No fixed remote retention period or zero-retention guarantee has been verified from this repository.
 

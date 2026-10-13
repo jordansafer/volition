@@ -86,6 +86,7 @@ button:hover,
 }
 
 input[type="text"],
+input[type="search"],
 input[type="password"],
 textarea {
   border: 1px solid #ccc;
@@ -103,6 +104,20 @@ textarea {
 #custom-endpoint {
   width: 100%;
   margin-top: 4px;
+}
+
+.list-search {
+  display: block;
+  margin-top: 12px;
+  width: 300px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#save-key:disabled,
+#test-key:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 select {
@@ -398,4 +413,13 @@ nav a:hover {
   font-weight: 700;
   font-size: 12px;
   cursor: help;
-} 
+}
+
+.chart-controls { display: flex; flex-wrap: wrap; gap: 16px; }
+.chart-controls label { display: flex; align-items: center; gap: 8px; }
+.chart-controls select { max-width: 100%; }
+#daily-chart svg { display: block; width: 100%; max-height: 320px; }
+.daily-table-wrap { max-height: 320px; overflow: auto; margin-top: 12px; }
+#chart-coverage, #metric-description { line-height: 1.5; }
+
+#chart-coverage { color: #666; font-size: 12px; }

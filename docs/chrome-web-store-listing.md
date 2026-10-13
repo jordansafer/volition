@@ -29,3 +29,7 @@ The extension's access to website URLs lets it compare hostnames with your lists
 ## Dashboard privacy / permission disclosure notes
 
 The `<all_urls>` host permission supports URL and hostname checks for blocking and a countdown injected on temporarily allowed pages. It is not used to read arbitrary page content. The `tabs` permission supports tab navigation and redirection; `storage` holds settings, lists, approval history, and usage records locally. The `scripting` permission injects the countdown. AI message contents go to OpenAI directly in own-key mode (or to the user-configured compatible endpoint) and through the Volition backend to OpenAI in hosted mode. Check the current Dashboard privacy declarations against [PRIVACY.md](../PRIVACY.md) before submission.
+
+## Store assets
+
+Use the live-recorded promo and current screenshots described in [promo/README.md](./promo/README.md). The video shows the actual extension, hosted AI request, temporary access and reblocking. Upload the video to YouTube and update its URL and the supplied image files manually in the Developer Dashboard. Update the matching extension package alongside the assets.

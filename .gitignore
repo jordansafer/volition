@@ -24,4 +24,12 @@ yarn-error.log*
 
 # OS metadata
 Thumbs.db
-Desktop.ini 
+Desktop.ini
+
+# Local reference screenshots supplied for review
+/צילום מסך*.png
+
+# Local visual-check captures (final store assets remain tracked)
+/docs/promo/blocked-live-1920x1080.png
+/docs/promo/request-live-1920x1080.png
+/docs/promo/blocked-mobile.png

@@ -1,0 +1,34 @@
+/* Visual styling only. All live wording is protected in the HTML/JS sources. */
+* { box-sizing: border-box; }
+body { max-width: 1160px; margin: 0 auto; padding: 28px 32px 48px; background: #f4f6fa; color: #24324a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; line-height: 1.5; }
+h1 { color: #1b2c48; font-size: 32px; letter-spacing: -1px; font-weight: 650; margin: 12px 0 24px; }
+h2 { color: #213854; font-size: 20px; font-weight: 650; margin: 0 0 16px; }
+h3 { font-size: 16px; }
+.card { padding: 26px 28px; border: 1px solid #e2e7ef; border-radius: 14px; box-shadow: 0 3px 12px #23395705; margin-bottom: 22px; }
+.container { width: 100%; max-width: 790px; margin: 8px auto 0; padding: 26px 32px 28px; background: #fff; border: 1px solid #e0e7f1; border-radius: 18px; box-shadow: 0 16px 50px #2942660c; }
+.container::before { content: ""; display: block; width: 40px; height: 40px; margin: 0 auto 12px; background: url("icons/icon48.png") center / contain no-repeat; }
+.container h1 { font-size: 32px; margin: 0 0 18px; }
+.sub { color: #6b7890; font-size: 15px; margin: 0 0 10px; line-height: 1.55; }
+#site-info { color: #64728b; font-size: 12px; overflow-wrap: anywhere; margin: 12px 0 18px; }
+.chat-window { height: 225px; border-color: #e1e8f2; background: #f8faff; border-radius: 12px; padding: 18px; margin-bottom: 14px; text-align: left; }
+.bubble { font-size: 16px; line-height: 1.6; max-width: 94%; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 12px; padding: 12px 16px; border-radius: 12px; }
+.user-msg { margin-left: auto; background: #e8f0ff; color: #254a83; border-bottom-right-radius: 4px; }
+.assistant-msg { background: #fff; color: #34445e; border: 1px solid #e3e9f3; border-bottom-left-radius: 4px; }
+textarea, input[type="text"], input[type="search"], input[type="password"], input[type="number"], select { font-family: inherit; color: #2b3e5a; background: #fff; border: 1px solid #d8e1ed; border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+textarea { resize: vertical; }
+#user-input { display: block; height: 75px; min-height: 65px; margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
+button, .file-btn { background: #356bdd; border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; }
+button:hover, .file-btn:hover { background: #2855b6; }
+:focus-visible { outline: 2px solid #527fdd; outline-offset: 3px; }
+.container .file-btn { display: inline-block; background: #eef3fd; color: #3a609e; border: 1px solid #dce6f8; vertical-align: middle; margin-right: 8px; }
+.container #send-btn { min-width: 120px; vertical-align: middle; }
+button:disabled { cursor: default; }
+.hint { color: #708099; font-size: 12px; line-height: 1.65; }
+ul { border-color: #e1e7ef; border-radius: 9px; background: #fafcff; }
+li { border-color: #e7edf5; font-size: 14px; }
+li:hover { background: #f0f5ff; }
+.remove-btn { background: #f6e8e8; color: #995656; border-radius: 5px; width: 24px; height: 24px; padding: 0; }
+.stat-box { background: #f1f5fd; border: 1px solid #e0e7f5; border-radius: 12px; }
+.stat-number { color: #356bdd; }
+.stats-table th { background: #eaf0fb; color: #2c446d; }
+@media (max-width: 640px) { body { padding: 16px 14px 28px; } .container { margin: 0 auto; padding: 24px 18px; } .container h1 { font-size: 27px; } .sub { font-size: 14px; } .card { padding: 20px 18px; } .chat-window { height: 245px; padding: 12px; } .input-row { flex-wrap: wrap; } ul { min-width: 0; width: 100%; } .list-search { width: 100%; } }

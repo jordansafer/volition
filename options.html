@@ -2,131 +2,190 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- verbatim keep text -->
   <title>Volition – Options</title>
   <link rel="icon" type="image/png" href="icons/icon32.png" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="presentation.css" />
 </head>
 <body>
+  <!-- verbatim keep text -->
   <h1>Volition Settings</h1>
   
   <nav style="text-align: center; margin-bottom: 20px;">
+    <!-- verbatim keep text -->
     <a href="stats.html" style="color: #0066cc; text-decoration: none; font-weight: 500;">📊 View Usage Statistics</a>
   </nav>
   
   <section class="card">
-    <h2>AI Provider</h2>
-    <label for="ai-provider">Negotiation mode</label>
+    <!-- verbatim keep text -->
+    <h2>Model Settings</h2>
+    <!-- verbatim keep text -->
+    <label for="ai-provider">Connection</label>
     <select id="ai-provider">
-      <option value="free">Volition Free (no API key required)</option>
-      <option value="openai">My OpenAI API key</option>
+      <!-- verbatim keep text -->
+      <option value="free">Volition</option>
+      <!-- verbatim keep text -->
+      <option value="openai">My API key</option>
     </select>
     <p id="provider-status" role="status"></p>
-    <small class="hint">Volition Free sends the blocked URL, conversation, image proofs, and recent approval summaries to Volition's hosted backend for AI processing. Your saved key is only used in BYO mode. <a href="PRIVACY.md" target="_blank">Privacy policy</a></small>
-    <h3>OpenAI API Key — BYO mode only</h3>
-    <small class="hint">The key, text model, vision model, custom endpoint, and token limit apply only to My OpenAI API key mode. Switching modes keeps your saved key.</small>
+    <!-- verbatim keep text -->
+    <small class="hint">Volition sends requests through its hosted service. With your API key, requests go to your configured provider. <a href="PRIVACY.md" target="_blank">Privacy policy</a></small>
+    <!-- verbatim keep text -->
+    <h3>My API Key Settings</h3>
+    <!-- verbatim keep text -->
+    <small class="hint">The key, models, endpoint, and token limit apply to My API key. Switching connections keeps your saved settings.</small>
     <div class="input-row">
-      <input type="password" id="api-key" placeholder="Paste your key here" />
+      <!-- verbatim keep text -->
+      <input type="password" id="api-key" placeholder="Paste your key here" aria-label="API key" />
+      <!-- verbatim keep text -->
       <button id="save-key">Save</button>
-      <button id="test-key">Test</button>
+      <!-- verbatim keep text -->
+      <button id="test-key">Test connection</button>
     </div>
-    <small class="hint">BYO only: <a href="https://platform.openai.com/account/api-keys" target="_blank">Get an OpenAI key</a>. Test sends a short request directly to OpenAI, even if you configured a custom endpoint.</small>
-    <span id="key-status"></span>
+    <!-- verbatim keep text -->
+    <small class="hint">Tests the selected text model using the key and endpoint entered here.</small>
+    <span id="key-status" role="status"></span>
     <div style="margin-top:10px;">
-      <label for="text-model-select"><strong>Text-only model:</strong></label>
-      <select id="text-model-select" style="margin-right:12px;">
-        <option value="gpt-3.5-turbo">gpt-3.5-turbo (cheap)</option>
-        <option value="gpt-4o-mini">gpt-4o-mini</option>
-        <option value="gpt-4o">gpt-4o</option>
-        <option value="gpt-o3">gpt-o3</option>
-        <option value="other">Other (custom)</option>
-      </select>
-      <input type="text" id="custom-text-model" placeholder="Enter custom model name" style="display:none; margin-right:12px;" />
+      <!-- verbatim keep text -->
+      <label for="text-model-select"><strong>Text model:</strong></label>
+      <select id="text-model-select" style="margin-right:12px;"></select>
+      <!-- verbatim keep text -->
+      <input type="text" id="custom-text-model" placeholder="Enter custom model name" aria-label="Custom text model" style="display:none; margin-right:12px;" />
 
-      <label for="vision-model-select"><strong>Vision model:</strong></label>
-      <select id="vision-model-select">
-        <option value="gpt-4o-mini">gpt-4o-mini (default)</option>
-        <option value="gpt-4o">gpt-4o</option>
-        <option value="gpt-o3">gpt-o3</option>
-        <option value="other">Other (custom)</option>
-      </select>
-      <input type="text" id="custom-vision-model" placeholder="Enter custom model name" style="display:none;" />
+      <!-- verbatim keep text -->
+      <label for="vision-model-select"><strong>Image model:</strong></label>
+      <select id="vision-model-select"></select>
+      <!-- verbatim keep text -->
+      <input type="text" id="custom-vision-model" placeholder="Enter custom model name" aria-label="Custom image model" style="display:none;" />
+      <!-- verbatim keep text -->
+      <small class="hint">The text model handles negotiation and site classification; the image model reviews uploaded proof.</small>
     </div>
   </section>
 
   <section class="card">
     <label class="inline-with-tooltip">
-      <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains (Free or BYO mode)
+      <!-- verbatim keep text -->
+      <input type="checkbox" id="advanced-mode" /> Enable advanced classification for new domains
+      <!-- verbatim keep text -->
       <span class="info" tabindex="0" aria-label="Info" aria-describedby="adv-tip">ℹ️</span>
-      <span role="tooltip" id="adv-tip" class="tooltip">If a URL is not covered by your blocklist or allowlist, it is sent to the LLM which decides whether to allow or block it and updates the appropriate list.</span>
+      <!-- verbatim keep text -->
+      <span role="tooltip" id="adv-tip" class="tooltip">If a site is not covered by your blocklist or allowlist, its hostname is sent to the model to decide whether to allow or block it and update the appropriate list.</span>
     </label>
   </section>
 
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Pause Blocking</h2>
+    <!-- verbatim keep text -->
     <small class="hint">Partial pause allows all sites except your really bad sites. Complete pause allows every site. Normal blocking resumes when the timer runs out.</small>
     <div class="input-row" style="margin-top: 8px;">
+      <!-- verbatim keep text -->
       <label for="pause-hours">Pause for</label>
       <input type="number" id="pause-hours" value="1" min="0.25" max="24" step="0.25" style="width: 80px;" />
+      <!-- verbatim keep text -->
       <label for="pause-hours">hours</label>
+      <!-- verbatim keep text -->
       <button id="partial-pause-btn">Partial pause</button>
+      <!-- verbatim keep text -->
       <button id="complete-pause-btn">Complete pause</button>
+      <!-- verbatim keep text -->
       <button id="resume-btn" style="display:none;">Resume now</button>
     </div>
     <span id="pause-status"></span>
   </section>
 
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Really Bad Sites</h2>
+    <!-- verbatim keep text -->
     <small class="hint">These domains and their subdomains stay blocked during a partial pause, even if allowlisted. Complete pause allows them. Outside a pause, they follow the normal blocklist and allowlist rules.</small>
+    <!-- verbatim keep text -->
+    <input type="search" id="reallyBadSites-search" class="list-search" placeholder="Search really bad sites" aria-label="Search really bad sites" aria-controls="reallyBadSites" />
     <ul id="reallyBadSites"></ul>
+    <!-- verbatim keep text -->
     <input type="text" id="new-bad-domain" placeholder="example.com" aria-label="Really bad site domain" />
+    <!-- verbatim keep text -->
     <button id="add-bad">Add</button>
   </section>
 
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Blocklist</h2>
+    <!-- verbatim keep text -->
     <small class="hint">Domains automatically block all subdomains (e.g., "youtube.com" blocks "www.youtube.com", "m.youtube.com", etc.)</small>
+    <!-- verbatim keep text -->
+    <input type="search" id="blocklist-search" class="list-search" placeholder="Search blocklist" aria-label="Search blocklist" aria-controls="blocklist" />
     <ul id="blocklist"></ul>
-    <input type="text" id="new-block-domain" placeholder="example.com" />
+    <!-- verbatim keep text -->
+    <input type="text" id="new-block-domain" placeholder="example.com" aria-label="Domain to block" />
+    <!-- verbatim keep text -->
     <button id="add-block">Add</button>
   </section>
+
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Allowlist</h2>
+    <!-- verbatim keep text -->
     <small class="hint">Domains automatically allow all subdomains. More specific rules override general ones.</small>
+    <!-- verbatim keep text -->
+    <input type="search" id="allowlist-search" class="list-search" placeholder="Search allowlist" aria-label="Search allowlist" aria-controls="allowlist" />
     <ul id="allowlist"></ul>
-    <input type="text" id="new-allow-domain" placeholder="example.com" />
+    <!-- verbatim keep text -->
+    <input type="text" id="new-allow-domain" placeholder="example.com" aria-label="Domain to allow" />
+    <!-- verbatim keep text -->
     <button id="add-allow">Add</button>
   </section>
+
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Custom Prompts (optional)</h2>
+    <!-- verbatim keep text -->
     <label for="neg-prompt"><strong>Negotiation prompt</strong></label>
+    <!-- verbatim keep text -->
     <textarea id="neg-prompt" rows="4" placeholder="Instructions for the AI's dialogue with you..."></textarea>
+    <!-- verbatim keep text -->
     <label for="class-prompt" style="margin-top:8px;"><strong>Classification prompt</strong></label>
+    <!-- verbatim keep text -->
     <textarea id="class-prompt" rows="4" placeholder="System prompt that decides BLOCK vs ALLOW for unknown domains..."></textarea>
+    <!-- verbatim keep text -->
     <button id="save-prompts" style="margin-top:10px;">Save Prompts</button>
     <span id="prompt-status"></span>
   </section>
+
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Advanced Settings</h2>
     <div style="margin-bottom: 16px;">
-      <label for="custom-endpoint"><strong>Custom API Endpoint (BYO mode only, optional):</strong></label>
+      <!-- verbatim keep text -->
+      <label for="custom-endpoint"><strong>API Endpoint (optional):</strong></label>
+      <!-- verbatim keep text -->
       <input type="text" id="custom-endpoint" placeholder="https://api.openai.com/v1/chat/completions" style="width: 100%; margin-top: 4px;" />
-      <small class="hint">Leave blank to use default OpenAI endpoint. Useful for OpenAI-compatible APIs.</small>
+      <!-- verbatim keep text -->
+      <small class="hint">For My API key. Leave blank to use OpenAI, or enter your provider's Chat Completions URL.</small>
     </div>
     <div style="margin-bottom: 16px;">
-      <label for="token-limit"><strong>Token Limit for Reasoning Models (BYO mode only):</strong></label>
-      <input type="number" id="token-limit" placeholder="300" min="50" max="4000" style="width: 100px; margin-top: 4px;" />
-      <small class="hint">Higher limits needed for reasoning models (GPT-5, GPT-o3, o1). Default: 300</small>
+      <!-- verbatim keep text -->
+      <label for="token-limit"><strong>Response Token Limit (optional):</strong></label>
+      <!-- verbatim keep text -->
+      <input type="number" id="token-limit" placeholder="4096" min="1" step="1" style="width: 100px; margin-top: 4px;" />
+      <!-- verbatim keep text -->
+      <small class="hint">For My API key. Includes reasoning and reply tokens. Leave blank for 4096 with reasoning models or 300 with other models.</small>
     </div>
     <div style="margin-bottom: 16px;">
+      <!-- verbatim keep text -->
       <label for="chat-font-size"><strong>Chat Font Size:</strong></label>
       <div class="input-row" style="margin-top: 6px;">
         <input type="range" id="chat-font-size" min="12" max="24" step="1" />
+        <!-- verbatim keep text -->
         <span id="chat-font-size-label" style="min-width:40px; text-align:right;">16px</span>
       </div>
+      <!-- verbatim keep text -->
       <small class="hint">Adjust the chat font size on the blocked page.</small>
     </div>
   </section>
+  <script src="model-config.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

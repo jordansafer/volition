@@ -1,19 +1,30 @@
+const statsSession = crypto.randomUUID();
 const params = new URLSearchParams(window.location.search);
+// verbatim keep text
 const originalUrl = params.get("original");
 
+// verbatim keep text
 const siteInfo = document.getElementById("site-info");
+// verbatim keep text
 const chatWindow = document.getElementById("chat-window");
+// verbatim keep text
 const userInput = document.getElementById("user-input");
+// verbatim keep text
 const sendBtn = document.getElementById("send-btn");
+// verbatim keep text
 const imageUpload = document.getElementById("image-upload");
+// verbatim keep text
 const modelInfo = document.getElementById("model-info");
 let currentModel = null;
 
+// verbatim keep text
 siteInfo.textContent = `You attempted to visit ${originalUrl}`;
 
+// verbatim keep text
 const TODAY = new Date().toISOString().split('T')[0];
 
 // store default prompt
+// verbatim keep text
 const DEFAULT_SYSTEM_PROMPT = `You are a strict but fair productivity assistant. Engage the user in negotiation to grant temporary access to the requested site. If their reason is legitimate, you may APPROVE. Otherwise DENY or set CONDITIONS. Respond conversationally and include "APPROVED" or "DENIED" clearly when you reach a decision.
 
 Today is ${TODAY}. When the user uploads a proof image you will receive an ISO timestamp (e.g., 2024-07-20T15:30:00Z) and the resolution in the preceding text message. Use that timestamp to verify recency.
@@ -49,44 +60,60 @@ If the user refuses tasks or fails to provide proof, deny access.
 
 const conversation = [
   {
+    // verbatim keep text
     role: "system",
     content: DEFAULT_SYSTEM_PROMPT
   },
   {
+    // verbatim keep text
     role: "user",
+    // verbatim keep text
     content: `I am attempting to visit: ${originalUrl}`
   }
 ];
 
 // merge override
+// verbatim keep text
 chrome.storage.local.get(["negotiationPrompt", "classificationPrompt"], (res) => {
   if (res.negotiationPrompt) {
+    // verbatim keep text
     conversation[0].content = `${DEFAULT_SYSTEM_PROMPT}\n\nUser override directives:\n${res.negotiationPrompt}`;
   }
   if (res.classificationPrompt) {
+    // verbatim keep text
     conversation[0].content += `\n\nAdditional site-classification override directives:\n${res.classificationPrompt}`;
   }
 });
 
+// verbatim keep text
 chrome.storage.local.get(["openaiApiKey", "aiProvider"], (d) => {
+  // verbatim keep text
   if (d.aiProvider === "openai" && !d.openaiApiKey) {
-    modelInfo.textContent = "⚠️ My OpenAI API key mode requires a key. Add one in Settings or select Volition Free.";
+    // verbatim keep text
+    modelInfo.textContent = "⚠️ My API key requires a key. Add one in Settings or select Volition.";
+    // verbatim keep text
     modelInfo.style.color = "#cc0000";
+  // verbatim keep text
   } else if (!d.aiProvider || d.aiProvider === "free") {
-    modelInfo.textContent = "Volition Free";
+    // verbatim keep text
+    modelInfo.textContent = "Volition";
   }
 });
 
 // fetch history
 let proofHistory = [];
+// verbatim keep text
 chrome.storage.local.get(["proofHistory"], (res) => {
   proofHistory = Array.isArray(res.proofHistory) ? res.proofHistory : [];
   if (proofHistory.length) {
     const lines = proofHistory
       .slice(-20)
       .reverse()
+      // verbatim keep text
       .map((e, idx) => `${idx + 1}. ${e.desc} (timestamp ${e.timestamp})`)
+      // verbatim keep text
       .join("\n");
+    // verbatim keep text
     conversation[0].content += `\n\nPrevious proof history (most recent first, max 20):\n${lines}`;
   }
 });
@@ -116,15 +143,20 @@ function parseDuration(text) {
 }
 
 function appendMessage(role, content) {
+  // verbatim keep text
   const div = document.createElement("div");
+  // verbatim keep text
   div.className = `bubble ${role === "user" ? "user-msg" : "assistant-msg"}`;
+  // verbatim keep text
   div.textContent = content;
+  // verbatim keep text
   div.dir = "auto";
   if (/[  -  ]/.test(content)) {
     // leave as textContent already
   }
   // Detect Hebrew characters and tag for stronger font styling
   if (/[ 90-\u05FF]/.test(content)) {
+    // verbatim keep text
     div.classList.add("he-text");
   }
   chatWindow.appendChild(div);
@@ -132,20 +164,26 @@ function appendMessage(role, content) {
 }
 
 // Toggle Hebrew styling on textarea as user types
+// verbatim keep text
 userInput.addEventListener("input", () => {
   if (/[\u0590-\u05FF]/.test(userInput.value)) {
+    // verbatim keep text
     userInput.classList.add("he-text");
   } else {
+    // verbatim keep text
     userInput.classList.remove("he-text");
   }
 });
 
+// verbatim keep text
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text && !imageUpload.files[0]) return;
 
   if (text) {
+    // verbatim keep text
     conversation.push({ role: "user", content: text });
+    // verbatim keep text
     appendMessage("user", text);
   }
 
@@ -153,35 +191,49 @@ sendBtn.addEventListener("click", async () => {
     const file = imageUpload.files[0];
     const imgData = await fileToBase64(file);
     const ts = new Date(file.lastModified || Date.now()).toISOString();
+    // verbatim keep text
     lastImageMeta = { timestamp: ts, desc: "(pending)" };
     conversation.push({
+      // verbatim keep text
       role: "user",
       content: [
+        // verbatim keep text
         { type: "text", text: `Proof image (timestamp ${ts}, ${imgData.width}×${imgData.height})` },
+        // verbatim keep text
         { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imgData.data}` } }
       ]
     });
+    // verbatim keep text
     appendMessage("user", "[Image uploaded]");
+    // verbatim keep text
     imageUpload.value = "";
+    // verbatim keep text
     document.getElementById("upload-label").textContent = "📷 Upload Image";
   }
 
+  // verbatim keep text
   userInput.value = "";
   sendBtn.disabled = true;
+  // verbatim keep text
   appendMessage("assistant", "[Thinking…]");
   const loadingIndex = chatWindow.children.length - 1;
 
   const response = await chrome.runtime.sendMessage({
+    // verbatim keep text
     type: "chatgpt",
+    statsSession,
     messages: conversation
   });
 
+  // verbatim keep text
   console.log("Received response:", response);
   sendBtn.disabled = false;
 
   if (response.error) {
+    // verbatim keep text
     console.error("Response error:", response.error);
     chatWindow.children[loadingIndex].remove();
+    // verbatim keep text
     appendMessage("assistant", "Error: " + response.error);
     return;
   }
@@ -189,16 +241,21 @@ sendBtn.addEventListener("click", async () => {
   chatWindow.children[loadingIndex].remove();
 
   if (response.reply && response.reply.content) {
+    // verbatim keep text
     console.log("Processing reply:", response.reply);
     const reply = response.reply;
     if (response.model) {
        currentModel = response.model;
-       modelInfo.textContent = `Model: ${currentModel}`;
+       // verbatim keep text
+       modelInfo.textContent = `Model: ${currentModel === "Volition Free" ? "Volition" : currentModel}`;
+       // verbatim keep text
        modelInfo.style.color = "#666";
      }
     conversation.push(reply);
+    // verbatim keep text
     appendMessage("assistant", reply.content);
 
+    // verbatim keep text
     if (reply.content.toLowerCase().includes("approved")) {
       let domain = null;
       try {
@@ -218,6 +275,7 @@ sendBtn.addEventListener("click", async () => {
         approvedUntil: expiresAt || null,
         model: currentModel || null,
         hadImage: !!lastImageMeta,
+        // verbatim keep text
         desc: (firstSentence.replace(/^APPROVED[^:]*:?/i, "").trim().substring(0, 140) || "User task completed")
       };
 
@@ -232,26 +290,34 @@ sendBtn.addEventListener("click", async () => {
       lastImageMeta = null;
 
       if (domain) {
+        // verbatim keep text
         await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt });
       }
       window.location.href = originalUrl;
     }
   } else {
+    // verbatim keep text
     console.warn("Unexpected response structure:", response);
+    // verbatim keep text
     if (response && typeof response === 'object') {
       // Try to extract any content from the response
       const content = response.content || response.message?.content || response.choices?.[0]?.message?.content;
       if (content) {
+        // verbatim keep text
         console.log("Found content in alternative structure:", content);
+        // verbatim keep text
         appendMessage("assistant", content);
         return;
       }
     }
+    // verbatim keep text
     appendMessage("assistant", "Sorry, I didn't receive a response. Please try again.");
   }
 });
 
+// verbatim keep text
 userInput.addEventListener("keydown", (e) => {
+  // verbatim keep text
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendBtn.click();
@@ -259,6 +325,7 @@ userInput.addEventListener("keydown", (e) => {
 });
 
 if (!chrome.runtime) {
+  // verbatim keep text
   appendMessage("assistant", "Extension context not available. Make sure this page is opened via the extension.");
 }
 
@@ -270,12 +337,16 @@ function fileToBase64(file) {
       img.onload = () => {
         const max = 256; // stronger downscale
         const scale = Math.min(1, max / Math.max(img.width, img.height));
+        // verbatim keep text
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
+        // verbatim keep text
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // verbatim keep text
         const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+        // verbatim keep text
         resolve({ data: dataUrl.split(",")[1], width: canvas.width, height: canvas.height });
       };
       img.src = reader.result;
@@ -284,28 +355,37 @@ function fileToBase64(file) {
   });
 }
 
+// verbatim keep text
 imageUpload.addEventListener("change",()=>{
   if(imageUpload.files[0]){
+    // verbatim keep text
     document.getElementById("upload-label").textContent="Image selected✔";
   } else {
+    // verbatim keep text
     document.getElementById("upload-label").textContent="📷 Upload Image";
   }
 });
 
 // Apply chat font size from settings
+// verbatim keep text
 chrome.storage.local.get(["chatFontSize"], (res) => {
   const size = parseInt(res.chatFontSize, 10);
   if (Number.isFinite(size)) {
+    // verbatim keep text
     chatWindow.style.fontSize = size + "px";
+    // verbatim keep text
     userInput.style.fontSize = size + "px";
   }
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
+  // verbatim keep text
   if (area === "local" && changes.chatFontSize) {
     const size = parseInt(changes.chatFontSize.newValue, 10);
     if (Number.isFinite(size)) {
+      // verbatim keep text
       chatWindow.style.fontSize = size + "px";
+      // verbatim keep text
       userInput.style.fontSize = size + "px";
     }
   }

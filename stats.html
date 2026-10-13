@@ -2,57 +2,101 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- verbatim keep text -->
   <title>Volition – Usage Statistics</title>
   <link rel="icon" type="image/png" href="icons/icon32.png" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="presentation.css" />
 </head>
 <body>
+  <!-- verbatim keep text -->
   <h1>Usage Statistics</h1>
   
   <nav style="text-align: center; margin-bottom: 20px;">
+    <!-- verbatim keep text -->
     <a href="options.html" style="color: #0066cc; text-decoration: none; margin-right: 16px;">← Back to Settings</a>
-    <button id="reset-stats" style="background: #dc3545; color: white;">Reset All Stats</button>
+    <!-- verbatim keep text -->
+    <button id="reset-stats" style="background: #dc3545; color: white;">Reset Usage Stats</button>
   </nav>
 
+  <section class="card" aria-labelledby="daily-title">
+    <!-- verbatim keep text -->
+    <h2 id="daily-title">Daily activity</h2>
+    <div class="chart-controls">
+      <!-- verbatim keep text -->
+      <label for="stats-metric">Metric <select id="stats-metric"></select></label>
+      <!-- verbatim keep text -->
+      <label for="stats-range">Period <select id="stats-range">
+        <!-- verbatim keep text -->
+        <option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option>
+      </select></label>
+    </div>
+    <p id="metric-description"></p>
+    <p id="chart-summary" aria-live="polite"></p>
+    <div id="daily-chart"></div>
+    <p id="chart-coverage"></p>
+    <!-- verbatim keep text -->
+    <details><summary>Daily values</summary><div class="daily-table-wrap">
+      <!-- verbatim keep text -->
+      <table class="stats-table"><thead><tr><th scope="col">Date (UTC)</th><th scope="col" id="daily-value-heading">Value</th></tr></thead><tbody id="daily-values"></tbody></table>
+    </div></details>
+  </section>
+
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>API Usage Overview</h2>
     <div id="total-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px;">
       <div class="stat-box">
+        <!-- verbatim keep text -->
         <div class="stat-number" id="total-calls">0</div>
+        <!-- verbatim keep text -->
         <div class="stat-label">Total API Calls</div>
       </div>
       <div class="stat-box">
+        <!-- verbatim keep text -->
         <div class="stat-number" id="total-tokens">0</div>
+        <!-- verbatim keep text -->
         <div class="stat-label">Total Tokens Used</div>
       </div>
       <div class="stat-box">
+        <!-- verbatim keep text -->
         <div class="stat-number" id="chat-calls">0</div>
+        <!-- verbatim keep text -->
         <div class="stat-label">Chat Calls</div>
       </div>
       <div class="stat-box">
+        <!-- verbatim keep text -->
         <div class="stat-number" id="classification-calls">0</div>
+        <!-- verbatim keep text -->
         <div class="stat-label">Classification Calls</div>
       </div>
     </div>
   </section>
 
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Usage by Model</h2>
     <div id="model-stats">
+      <!-- verbatim keep text -->
       <p style="color: #666; text-align: center;">No API calls recorded yet.</p>
     </div>
   </section>
 
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Recent Activity</h2>
     <div id="recent-activity">
+      <!-- verbatim keep text -->
       <p style="color: #666; text-align: center;">No recent activity.</p>
     </div>
   </section>
 
   <section class="card">
+    <!-- verbatim keep text -->
     <h2>Recent Approvals</h2>
     <div id="approvals">
+      <!-- verbatim keep text -->
       <p style="color: #666; text-align: center;">No approvals yet.</p>
     </div>
   </section>

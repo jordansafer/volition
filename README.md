@@ -4,10 +4,10 @@ Volition is an AI website blocker that helps you focus by blocking distracting s
 
 Install [Volition from the Chrome Web Store](https://chromewebstore.google.com/detail/volition/iempmfmcjgjdpmobhlaookjjjmbfiaeh).
 
-![Screenshot of blocked page](./docs/screenshot-blocked.png)
+![Screenshot of blocked page](./docs/promo/01-blocked.png)
 
 
-https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
+[Watch the actual extension in use](./docs/promo/volition-promo.mp4) · [Store assets and upload instructions](./docs/promo/README.md)
 
 
 ---
@@ -40,10 +40,12 @@ https://github.com/user-attachments/assets/055eda97-531b-4805-ae42-cb8f8837ab73
    2. Enable **Developer mode**.
    3. Click **Load unpacked** → select the project folder.
 3. Click the toolbar icon → **Options**.
-4. New users without a key start with **Volition Free**. Alternatively select **My OpenAI API key**, save your key, and configure your models or custom endpoint. Upgrades with a saved key and no stored mode retain BYO behavior. Existing stored modes and keys are preserved; switch modes explicitly in Settings.
+4. New users start with **Volition** selected under Connection. To use your own provider, select **My API key**, save your key, and configure your models or endpoint. Upgrades preserve saved connections, keys, and model selections, including custom IDs and older defaults. New model settings default to `gpt-6-luna` with medium reasoning for both text and image input.
 5. Start browsing—blocked sites will redirect to the negotiation screen. Sending a message shares the blocked URL and conversation with your selected AI service. Enable advanced classification in Options if you also want unknown domains reviewed; it is off by default.
 
-For a Web Store installation, install using the link above, click the toolbar icon for Settings, and start browsing. Free mode needs no user API configuration. In optional BYO mode, requests go directly to OpenAI or your configured compatible endpoint. The Test button always tests against OpenAI, even with a custom endpoint.
+For a Web Store installation, install using the link above, click the toolbar icon for Settings, and start browsing. With your own API key, requests go directly to OpenAI or your configured compatible endpoint. **Test connection** uses the text model, key, endpoint, and token limit currently entered in Settings. The hosted service keeps its own model configuration.
+
+Search above each site list to filter domains without changing your blocking rules. The model menus retain previous choices labeled **legacy**, and **Other (custom)** accepts provider-specific model IDs. The current model catalog and compatibility notes are in [docs/models.md](./docs/models.md).
 
 ---
 
@@ -63,7 +65,7 @@ The Store's detailed description and disclosure copy are maintained in [docs/chr
 Bump the version in `manifest.json` **and** `package.json`, then push a matching tag:
 
 ```
-git tag v1.1.4 && git push origin v1.1.4
+git tag v1.1.6 && git push origin v1.1.6
 ```
 
 The workflow refuses to run if the tag and `manifest.json` disagree. You can also trigger it
@@ -98,7 +100,7 @@ The extension ID is not a secret — it lives in the workflow's `env` block.
 ### NPM scripts (optional)
 | Script | Purpose |
 |--------|---------|
-| `npm test` | Run provider, migration, and classification tests using Node's test runner. |
+| `npm test` | Run provider, model migration, connection-test, classification, and site-list tests using Node's test runner. |
 | `npm run build` | Generates `dist/` & zip. |
 
 ---
