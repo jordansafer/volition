@@ -65,7 +65,7 @@ The Store's detailed description and disclosure copy are maintained in [docs/chr
 Bump the version in `manifest.json` **and** `package.json`, then push a matching tag:
 
 ```
-git tag v1.1.6 && git push origin v1.1.6
+git tag v1.1.7 && git push origin v1.1.7
 ```
 
 The workflow refuses to run if the tag and `manifest.json` disagree. You can also trigger it

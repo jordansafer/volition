@@ -304,8 +304,8 @@
     "${…}: ${…} ${…}"
   ],
   "model-config.js": [
-    "Luna ($)",
-    "Sol ($$)",
+    "gpt-6-luna ($)",
+    "gpt-6-sol ($$)",
     "gpt-3.5-turbo ($$) (legacy)",
     "gpt-4o-mini ($) (legacy)",
     "gpt-4o ($$) (legacy)",

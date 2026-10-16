@@ -7,9 +7,9 @@ globalThis.VolitionModels = (() => {
   const defaultEndpoint = "https://api.openai.com/v1/chat/completions";
   const models = [
     // verbatim keep text
-    { id: "gpt-6-luna", label: "Luna ($)", image: true },
+    { id: "gpt-6-luna", label: "gpt-6-luna ($)", image: true },
     // verbatim keep text
-    { id: "gpt-6-sol", label: "Sol ($$)", image: true },
+    { id: "gpt-6-sol", label: "gpt-6-sol ($$)", image: true },
     // verbatim keep text
     { id: "gpt-3.5-turbo", label: "gpt-3.5-turbo ($$) (legacy)", image: false },
     // verbatim keep text
