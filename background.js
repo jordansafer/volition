@@ -2,6 +2,16 @@
 importScripts("model-config.js");
 // verbatim keep text
 importScripts("daily-stats.js");
+// verbatim keep text
+importScripts("vendor/tldts-7.4.19.min.js", "site-context.js");
+
+// Approval records and access rules must commit together, even across tabs.
+let accessQueue = Promise.resolve();
+function updateAccess(task) {
+  const result = accessQueue.then(task);
+  accessQueue = result.catch(() => {});
+  return result;
+}
 
 // Statistics must never prevent browsing or access if local storage fails.
 // verbatim keep text
@@ -231,14 +241,14 @@ async function handleUrl(tabId, url) {
   if (!domain) return;
 
   const { blocklist = [], allowlist = [], advancedMode = false,
-    reallyBadSites = DEFAULT_REALLY_BAD_SITES, pauseUntil, pauseMode
+    reallyBadSites = DEFAULT_REALLY_BAD_SITES, pauseUntil, pauseMode, proofHistory = []
   } = await chrome.storage.local.get([
     // verbatim keep text
     "blocklist",
     // verbatim keep text
     "allowlist",
     // verbatim keep text
-    "advancedMode", "reallyBadSites", "pauseUntil", "pauseMode"
+    "advancedMode", "reallyBadSites", "pauseUntil", "pauseMode", "proofHistory"
   ]);
 
   // verbatim keep text
@@ -257,19 +267,23 @@ async function handleUrl(tabId, url) {
   );
 
   // Find the best matches from both lists
-  let allowMatch = findBestMatch(domain, normalizedAllow);
+  const now = Date.now();
+  const activeAllow = normalizedAllow.filter(e => e.expiresAt == null || e.expiresAt > now);
+  const requestedSite = VolitionSites.site(domain);
+  const approvalMatch = activeAllow.find(e => {
+    // Recover the scope of approvals saved before approvalSite was introduced.
+    const negotiated = e.approvalSite || (Array.isArray(proofHistory) && proofHistory.some(
+      p => p.domain === e.domain && p.approvedUntil === e.expiresAt
+    ) && VolitionSites.site(e.domain));
+    return negotiated === requestedSite;
+  });
+  if (approvalMatch) {
+    await injectTimer(tabId, approvalMatch.expiresAt);
+    return;
+  }
+  let allowMatch = findBestMatch(domain, activeAllow);
   // verbatim keep text
   let blockMatch = findBestMatch(domain, [...blocklist, ...reallyBadSites].map(d => typeof d === "string" ? d : d.domain));
-
-  // Check for expired allowlist entries
-  if (allowMatch && allowMatch.expiresAt && Date.now() > allowMatch.expiresAt) {
-    // Remove expired entry
-    await chrome.storage.local.set({
-      allowlist: normalizedAllow.filter((e) => e.domain !== allowMatch.domain)
-    });
-    // Treat as if no allow match
-    allowMatch = null;
-  }
 
   // Calculate specificity for comparison (after expiry check)
   // verbatim keep text
@@ -537,10 +551,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // verbatim keep text
   if (message.type === "allow_domain") {
-    (async () => {
+    updateAccess(async () => {
       const { domain, durationMinutes, expiresAt } = message;
       // verbatim keep text
-      const { allowlist = [], blocklist = [] } = await chrome.storage.local.get(["allowlist", "blocklist"]);
+      const { allowlist = [], blocklist = [], proofHistory = [] } = await chrome.storage.local.get(["allowlist", "blocklist", "proofHistory"]);
       // Normalize existing allowlist entries to objects
       const normalized = allowlist.map((d) =>
         // verbatim keep text
@@ -550,9 +564,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const finalExpires = typeof expiresAt === "number" ? expiresAt : (durationMinutes ? Date.now() + durationMinutes * 60 * 1000 : null);
       const existingIndex = normalized.findIndex((e) => e.domain === domain);
       if (existingIndex === -1) {
-        normalized.push({ domain, expiresAt: finalExpires });
+        normalized.push({ domain, expiresAt: finalExpires, approvalSite: VolitionSites.site(domain) });
       } else {
         normalized[existingIndex].expiresAt = finalExpires;
+        normalized[existingIndex].approvalSite = VolitionSites.site(domain);
       }
 
       // If this is an unlimited allow (permanent), remove the exact domain from blocklist
@@ -562,37 +577,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         updatedBlocklist = (blocklist || []).filter((e) => (typeof e === "string" ? e : e.domain) !== domain);
       }
 
-      await chrome.storage.local.set({ allowlist: normalized, blocklist: updatedBlocklist });
+      const changes = { allowlist: normalized, blocklist: updatedBlocklist };
+      if (message.approval) {
+        const history = Array.isArray(proofHistory) ? proofHistory : [];
+        changes.proofHistory = [...history, {
+          ...message.approval, domain, approvedUntil: finalExpires
+        }].slice(-20);
+      }
+      await chrome.storage.local.set(changes);
       await recordStats(VolitionStats.approve(sender.tab?.id, finalExpires));
       // verbatim keep text
       sendResponse({ status: "ok" });
-    })();
+    }).catch(error => sendResponse({ error: error.message }));
     return true;
   }
 
   // verbatim keep text
   if (message.type === "expire_allow") {
-    (async () => {
+    updateAccess(async () => {
       const { domain, tabId } = message;
       const useTabId = tabId || (sender.tab ? sender.tab.id : null);
       // verbatim keep text
       const { allowlist = [] } = await chrome.storage.local.get(["allowlist"]);
       const updated = (allowlist || []).filter((e) => {
         // verbatim keep text
-        if (typeof e === "string") return e !== domain;
-        return e.domain !== domain;
+        if (typeof e === "string") return true;
+        const related = domainMatches(domain, e.domain) || e.approvalSite === VolitionSites.site(domain);
+        // A countdown from another tab must not revoke a newer grant.
+        return !related || e.expiresAt == null || e.expiresAt > Date.now();
       });
       await chrome.storage.local.set({ allowlist: updated });
       // force re-check of current tab to block
       if (useTabId !== null) {
         const tab = await chrome.tabs.get(useTabId);
         if (tab && tab.url) {
-          handleUrl(useTabId, tab.url);
+          await handleUrl(useTabId, tab.url);
         }
       }
       // verbatim keep text
       sendResponse({ status: "expired" });
-    })();
+    }).catch(error => sendResponse({ error: error.message }));
     return true;
   }
 });

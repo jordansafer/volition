@@ -1,6 +1,6 @@
 # Volition – Privacy Policy
 
-_Last updated: 2026-09-28_
+_Last updated: 2026-11-01_
 
 Volition blocks distracting websites and uses AI to negotiate access. Settings and access records are stored in your browser. AI features send information to the service selected in Settings.
 
@@ -16,7 +16,7 @@ When you send a negotiation message, the extension sends the current conversatio
 - The full URL of the blocked page, including any path, query string, or fragment present in that URL.
 - Your messages, previous AI replies, built-in instructions, and your custom negotiation and classification prompts.
 - Images you choose to upload, converted to JPEG with a maximum dimension of 256 pixels, plus their dimensions and a file modification timestamp (or current time).
-- Descriptions and timestamps from up to 20 previous approvals, included as context to avoid repeating tasks. These descriptions can contain information about your activities.
+- Up to 20 previous approvals, refreshed before every negotiation message: hostname and registrable site, approval time, granted duration, expiry, current remaining time, whether the approval is active or unlimited, whether it is for the requested site, and the proof/reason excerpt. These excerpts can contain information about your activities. This context helps the negotiator recognize repeat site requests and avoid repeating tasks. The same approval context is sent in hosted and BYO modes.
 
 If you enable advanced classification (off by default), unmatched website hostnames and the classification instructions are sent to the selected service to decide whether to block or allow them. This does not send the visited page's body or the entire blocklist. Ordinary list matching and pauses do not require AI requests.
 

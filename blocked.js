@@ -72,9 +72,11 @@ const conversation = [
   }
 ];
 
-// merge override
+// Refresh settings and history before every send, including the first one.
+async function refreshNegotiationContext() {
 // verbatim keep text
-chrome.storage.local.get(["negotiationPrompt", "classificationPrompt"], (res) => {
+  const res = await chrome.storage.local.get(["negotiationPrompt", "classificationPrompt"]);
+  conversation[0].content = DEFAULT_SYSTEM_PROMPT;
   if (res.negotiationPrompt) {
     // verbatim keep text
     conversation[0].content = `${DEFAULT_SYSTEM_PROMPT}\n\nUser override directives:\n${res.negotiationPrompt}`;
@@ -83,7 +85,8 @@ chrome.storage.local.get(["negotiationPrompt", "classificationPrompt"], (res) =>
     // verbatim keep text
     conversation[0].content += `\n\nAdditional site-classification override directives:\n${res.classificationPrompt}`;
   }
-});
+  await refreshProofHistory();
+}
 
 // verbatim keep text
 chrome.storage.local.get(["openaiApiKey", "aiProvider"], (d) => {
@@ -100,23 +103,25 @@ chrome.storage.local.get(["openaiApiKey", "aiProvider"], (d) => {
   }
 });
 
-// fetch history
-let proofHistory = [];
+async function refreshProofHistory() {
 // verbatim keep text
-chrome.storage.local.get(["proofHistory"], (res) => {
-  proofHistory = Array.isArray(res.proofHistory) ? res.proofHistory : [];
+  const res = await chrome.storage.local.get(["proofHistory"]);
+  const proofHistory = Array.isArray(res.proofHistory) ? res.proofHistory : [];
+  let requestedDomain;
+  try { requestedDomain = new URL(originalUrl).hostname; } catch {}
+  const now = Date.now();
   if (proofHistory.length) {
     const lines = proofHistory
       .slice(-20)
       .reverse()
       // verbatim keep text
-      .map((e, idx) => `${idx + 1}. ${e.desc} (timestamp ${e.timestamp})`)
+      .map((e, idx) => `${idx + 1}. ${JSON.stringify(VolitionSites.summarize(e, requestedDomain, now))} (timestamp ${e.timestamp})`)
       // verbatim keep text
       .join("\n");
     // verbatim keep text
     conversation[0].content += `\n\nPrevious proof history (most recent first, max 20):\n${lines}`;
   }
-});
+}
 
 let lastImageMeta = null; // {timestamp, desc}
 
@@ -218,23 +223,32 @@ sendBtn.addEventListener("click", async () => {
   appendMessage("assistant", "[Thinking…]");
   const loadingIndex = chatWindow.children.length - 1;
 
-  const response = await chrome.runtime.sendMessage({
-    // verbatim keep text
-    type: "chatgpt",
-    statsSession,
-    messages: conversation
-  });
+  let response;
+  try {
+    await refreshNegotiationContext();
+    response = await chrome.runtime.sendMessage({
+      // verbatim keep text
+      type: "chatgpt",
+      statsSession,
+      messages: conversation
+    });
+  } catch (error) {
+    response = { error: error.message };
+  }
 
   // verbatim keep text
   console.log("Received response:", response);
   sendBtn.disabled = false;
 
+  function showError(error) {
+    // verbatim keep text
+    appendMessage("assistant", "Error: " + error);
+  }
   if (response.error) {
     // verbatim keep text
     console.error("Response error:", response.error);
     chatWindow.children[loadingIndex].remove();
-    // verbatim keep text
-    appendMessage("assistant", "Error: " + response.error);
+    showError(response.error);
     return;
   }
 
@@ -255,14 +269,15 @@ sendBtn.addEventListener("click", async () => {
     // verbatim keep text
     appendMessage("assistant", reply.content);
 
-    // verbatim keep text
-    if (reply.content.toLowerCase().includes("approved")) {
+    // Only a decision line grants access; recalling a past approval must not.
+    const decision = reply.content.match(/^\s*(?:\*\*)?APPROVED(?:\s+for)?\s+(?:[1-9]\d*\s*(?:seconds?|secs?|minutes?|mins?|hours?|hrs?|days?|weeks?)|unlimited|indefinite|permanent)(?:\*\*)?\s*[.!]?\s*$/im);
+    if (decision) {
       let domain = null;
       try {
         domain = new URL(originalUrl).hostname;
       } catch (_) {}
 
-      const durationMs = parseDuration(reply.content);
+      const durationMs = parseDuration(decision[0]);
       const expiresAt = durationMs ? Date.now() + durationMs : null;
 
       // Build proof entry (always record one, with or without image)
@@ -284,15 +299,20 @@ sendBtn.addEventListener("click", async () => {
         baseEntry.imageTimestamp = lastImageMeta.timestamp;
       }
 
-      proofHistory.push(baseEntry);
-      while (proofHistory.length > 20) proofHistory.shift();
-      chrome.storage.local.set({ proofHistory });
-      lastImageMeta = null;
-
       if (domain) {
-        // verbatim keep text
-        await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt });
+        try {
+          // verbatim keep text
+          const result = await chrome.runtime.sendMessage({ type: "allow_domain", domain, expiresAt, approval: baseEntry });
+          if (result.error) {
+            showError(result.error);
+            return;
+          }
+        } catch (error) {
+          showError(error.message);
+          return;
+        }
       }
+      lastImageMeta = null;
       window.location.href = originalUrl;
     }
   } else {

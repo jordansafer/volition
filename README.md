@@ -107,11 +107,13 @@ The extension ID is not a secret — it lives in the workflow's `env` block.
 
 ## 🔒 Privacy & Data
 
-Free mode sends a `messages` array over HTTPS to `https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate`. Negotiation includes the full blocked URL, conversation and custom prompts, uploaded image proofs, and recent approval descriptions/timestamps. Optional classification sends the hostname and classification prompt. The stored BYO key is not sent to Free.
+Free mode sends a `messages` array over HTTPS to `https://volition-free-api-jordansafers-projects.vercel.app/api/negotiate`. Negotiation includes the full blocked URL, conversation and custom prompts, uploaded image proofs, and the latest 20 approval records: site/domain, duration, approval time, expiry, remaining time, and proof/reason excerpt. This context is refreshed before every send, including approvals from other tabs. It lets the negotiator recognize repeat requests without imposing an automatic repeat-denial rule. Optional classification sends the hostname and classification prompt. The stored BYO key is not sent to Free.
 
 The recovered backend source is in [backend/](./backend/README.md). It validates and forwards message text/images to OpenAI (`gpt-4o-mini`). The handler has no database/file persistence or successful-request content logging, but logs full error objects on failures. Vercel logging/retention settings and OpenAI account data controls still require separate verification; these are not defined by the supplied source. BYO sends requests directly to OpenAI or the configured endpoint; choose an HTTPS endpoint you trust with your key.
 
 Locally, the extension keeps settings/lists, access expiries, up to 20 approval records (including URLs and response excerpts), usage totals, and up to 100 API activity records. Full chats and raw proof images are not persisted by the extension, but remain in page memory during a conversation and are sent with subsequent messages. Diagnostic console output can include replies and errors. There is no extension analytics upload or cookie tracking. **Reset statistics** does not erase approval history. See [PRIVACY.md](./PRIVACY.md) for details and deletion limits.
+
+Negotiated access covers subdomains of the same registrable site until its original expiry. For example, a 30-minute grant for `open.spotify.com` also covers `accounts.spotify.com`, with the same deadline and no additional approval record. The bundled Public Suffix List includes private hosting boundaries, so separate `github.io` tenants stay separate. Existing approvals with matching local history also gain this scope. Manual allow rules retain their existing specificity. Expired grants stop covering the site; a new request includes the earlier grant as context. Approval history and access rules are saved together by the service worker to preserve concurrent approvals from different tabs.
 
 ---
 

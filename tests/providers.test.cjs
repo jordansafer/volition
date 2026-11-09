@@ -19,7 +19,7 @@ function setup(initial = {}, file = 'background.js') {
       addEventListener(event, fn) { this.handlers[event] = fn; }
     };
   }
-  const s = { state, requests, elements, response: { reply: { role: 'assistant', content: 'APPROVED for 5 minutes' } } };
+  const s = { state, requests, elements, timers: [], navigations: [], response: { reply: { role: 'assistant', content: 'APPROVED for 5 minutes' } } };
   const context = vm.createContext({
     URL, console, Date, setTimeout() {}, setInterval() {},
     document: {
@@ -31,8 +31,8 @@ function setup(initial = {}, file = 'background.js') {
       requests.push({ url, ...options });
       return { ok: !s.status, status: s.status || 200, async json() { return s.response; }, async text() { return 'error'; } };
     },
-    importScripts(file) {
-      vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+    importScripts(...files) {
+      for (const file of files) vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
     },
     chrome: {
       storage: { local: {
@@ -41,7 +41,8 @@ function setup(initial = {}, file = 'background.js') {
         async remove(keys) { for (const key of [].concat(keys)) delete state[key]; }
       } },
       runtime: { onInstalled: { addListener(fn) { s.install = fn; } }, onMessage: { addListener(fn) { s.message = fn; } }, getURL: value => value },
-      tabs: { onUpdated: { addListener(fn) { s.tabUpdated = fn; } }, onRemoved: { addListener(fn) { s.tabRemoved = fn; } }, update() {} },
+      tabs: { onUpdated: { addListener(fn) { s.tabUpdated = fn; } }, onRemoved: { addListener(fn) { s.tabRemoved = fn; } }, update(id, data) { s.navigations.push({ id, ...data }); }, async get(id) { return { id, url: s.tabUrl }; } },
+      scripting: { async executeScript(details) { s.timers.push(details); } },
       action: { onClicked: { addListener() {} } }
     }
   });
@@ -382,4 +383,102 @@ test('pause messages update the original settings and surface persistence failur
   settings.context.chrome.runtime.sendMessage = async () => ({ error: 'Storage unavailable' });
   await settings.context.changePause(null);
   assert.match(settings.elements['pause-status'].textContent, /Could not change/);
+});
+
+test('concurrent approvals commit access and the newest 20 proof records together', async () => {
+  const s = setup();
+  const send = message => new Promise(resolve => s.message(message, {}, resolve));
+  const records = Array.from({ length: 25 }, (_, i) => ({
+    domain: `site${i}.com`, url: `https://site${i}.com/work`,
+    timestamp: new Date().toISOString(), approvedMs: 300000,
+    approvedUntil: Date.now() + 300000, desc: `Proof ${i}`,
+    model: 'custom-model', hadImage: true, imageTimestamp: '2026-10-31T12:00:00Z'
+  }));
+  const results = await Promise.all(records.map(approval => send({
+    type: 'allow_domain', domain: approval.domain, expiresAt: approval.approvedUntil, approval
+  })));
+  assert.ok(results.every(r => r.status === 'ok'));
+  assert.deepEqual(s.state.proofHistory, records.slice(-20));
+  assert.equal(s.state.allowlist.length, 25);
+  assert.equal(s.state.allowlist[24].approvalSite, 'site24.com');
+
+  const set = s.context.chrome.storage.local.set;
+  s.context.chrome.storage.local.set = async () => { throw Error('Disk full'); };
+  const failed = await send({ type: 'allow_domain', domain: 'failure.com', approval: { desc: 'Must not save' } });
+  assert.equal(failed.error, 'Disk full');
+  assert.deepEqual(s.state.proofHistory, records.slice(-20));
+  assert.ok(!s.state.allowlist.some(e => e.domain === 'failure.com'));
+  s.context.chrome.storage.local.set = set;
+  assert.equal((await send({ type: 'allow_domain', domain: 'recovered.com' })).status, 'ok');
+});
+
+test('a negotiated Spotify grant covers sibling login hosts with its original deadline, then expires', async () => {
+  const s = setup({ blocklist: ['spotify.com', 'accounts.spotify.com'], reallyBadSites: ['accounts.spotify.com'] });
+  const send = message => new Promise(resolve => s.message(message, {}, resolve));
+  let now = Date.now();
+  s.context.Date = class extends Date { static now() { return now; } };
+  const expiry = now + 30 * 60000;
+  await send({ type: 'allow_domain', domain: 'open.spotify.com', expiresAt: expiry, approval: { desc: 'Work music', approvedMs: 1800000 } });
+  now += 60000;
+  await s.context.handleUrl(1, 'https://accounts.spotify.com/login');
+  await s.context.handleUrl(2, 'https://www.spotify.com/');
+  assert.equal(s.navigations.length, 0);
+  assert.deepEqual(s.timers.map(t => t.args[0]), [expiry, expiry]);
+  assert.equal(s.state.proofHistory.length, 1);
+  assert.equal(s.state.allowlist.length, 1);
+  now = expiry;
+  await s.context.handleUrl(1, 'https://accounts.spotify.com/login');
+  assert.match(s.navigations[0].url, /^blocked.html/);
+  // Expiry on a sibling removes the original rule, without touching history.
+  s.tabUrl = 'https://accounts.spotify.com/login';
+  await send({ type: 'expire_allow', domain: 'accounts.spotify.com', tabId: 1 });
+  assert.equal(s.state.allowlist.length, 0);
+  assert.equal(s.state.proofHistory.length, 1);
+});
+
+test('related approval scope respects public and private suffix boundaries and lookalike hosts', async () => {
+  for (const [approved, related, unrelated] of [
+    ['open.spotify.com', 'accounts.spotify.com', 'spotify.com.evil.com'],
+    ['www.example.co.uk', 'login.example.co.uk', 'other.co.uk'],
+    ['one.github.io', 'login.one.github.io', 'two.github.io'],
+    ['one.blogspot.com', 'login.one.blogspot.com', 'two.blogspot.com'],
+    ['one.s3.amazonaws.com', 'login.one.s3.amazonaws.com', 'two.s3.amazonaws.com'],
+    ['one.internal', 'one.internal', 'two.internal'],
+    ['127.0.0.1', '127.0.0.1', '127.0.0.2']
+  ]) {
+    const s = setup({ blocklist: [related, unrelated] });
+    await new Promise(resolve => s.message({ type: 'allow_domain', domain: approved, expiresAt: Date.now() + 60000 }, {}, resolve));
+    await s.context.handleUrl(1, `https://${related}/`);
+    await s.context.handleUrl(2, `https://${unrelated}/`);
+    assert.deepEqual(s.navigations.map(n => n.id), [2], approved);
+    assert.equal(s.timers.length, 1, approved);
+  }
+});
+
+test('existing approval records recover related-site access; manual allow rules keep their specificity', async () => {
+  const expiry = Date.now() + 60000;
+  const s = setup({
+    allowlist: [{ domain: 'www.spotify.com', expiresAt: expiry }],
+    blocklist: ['spotify.com', 'accounts.spotify.com'],
+    proofHistory: [{ domain: 'www.spotify.com', approvedUntil: expiry, desc: 'Existing proof' }]
+  });
+  await s.context.handleUrl(1, 'https://accounts.spotify.com/');
+  assert.equal(s.navigations.length, 0);
+  assert.equal(s.timers[0].args[0], expiry);
+  s.state.proofHistory = [];
+  await s.context.handleUrl(1, 'https://accounts.spotify.com/');
+  assert.equal(s.navigations.length, 1);
+});
+
+test('old countdowns preserve renewed grants, permanent allows, and unrelated access', async () => {
+  const expiry = Date.now() + 60000;
+  const s = setup({ allowlist: [
+    { domain: 'open.spotify.com', approvalSite: 'spotify.com', expiresAt: expiry },
+    { domain: 'spotify.com', expiresAt: null },
+    'accounts.spotify.com',
+    { domain: 'example.com', expiresAt: Date.now() - 1 }
+  ] });
+  const before = structuredClone(s.state.allowlist);
+  await new Promise(resolve => s.message({ type: 'expire_allow', domain: 'accounts.spotify.com' }, {}, resolve));
+  assert.deepEqual(s.state.allowlist, before);
 });

@@ -18,6 +18,7 @@ rsync -a ./ dist/ \
   --exclude ".agents" \
   --exclude "AGENTS.md" \
   --exclude ".codex" \
+  --exclude ".aws" \
   --exclude ".env" \
   --exclude ".env.*" \
   --exclude "dist" \
